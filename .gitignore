@@ -1,0 +1,32 @@
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.production
+backend/.env
+frontend/.env
+
+# Python
+__pycache__/
+*.py[cod]
+backend/venv/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
+# ML Models (too large for git — use Git LFS or store separately)
+*.pt
+*.pkl
+*.bin
+backend/ml/checkpoints/
+
+# Docker
+postgres_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
