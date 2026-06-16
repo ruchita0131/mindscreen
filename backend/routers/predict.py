@@ -62,7 +62,7 @@ async def predict_fused(
     if not request.text.strip():
         raise HTTPException(status_code=422, detail="Text cannot be empty")
 
-    result = get_fused_prediction(request.answers, request.text)
+    result = get_fused_prediction(request.answers, request.text, request.audio_base64)
     crisis_flag = result["risk_level"] == "severe" or request.answers[8] > 0
 
     assessment = Assessment(

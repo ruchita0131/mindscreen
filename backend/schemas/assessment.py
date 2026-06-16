@@ -10,6 +10,7 @@ class PredictTextRequest(BaseModel):
 class FusedPredictRequest(BaseModel):
     answers: conlist(int, min_length=9, max_length=9) # type: ignore
     text: str
+    audio_base64: Optional[str] = None
 
 class RiskResponse(BaseModel):
     risk_level: str
