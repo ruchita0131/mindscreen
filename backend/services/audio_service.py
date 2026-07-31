@@ -1,74 +1,143 @@
 import base64
 import io
-import librosa
 import numpy as np
-import random
-import soundfile as sf
+import librosa
 
 def get_audio_prediction(audio_base64: str) -> dict:
     """
-    Extracts acoustic features from base64 audio and returns a mock prediction.
-    Once a DAIC-WOZ audio model is trained, swap the mock logic here.
+    Extracts acoustic features from base64-encoded audio (WebM/WAV/MP3)
+    and returns a risk prediction.
+    Once a DAIC-WOZ audio model is trained, swap the mock logic section.
     """
+    # No audio provided — treat as neutral/minimal, let text + PHQ carry the weight
     if not audio_base64:
         return {
             "risk_level": "minimal",
-            "confidence": 1.0,
-            "probabilities": {"minimal": 1.0, "mild": 0.0, "moderate": 0.0, "severe": 0.0}
+            "confidence": 0.5,
+            "probabilities": {"minimal": 0.55, "mild": 0.25, "moderate": 0.15, "severe": 0.05}
         }
-        
+
     try:
-        # 1. Decode Base64 to audio bytes
-        # Format usually looks like "data:audio/webm;base64,GkXfowE..."
+        # ── 1. DECODE BASE64 ──────────────────────────────────────────────────────
+        # Browser sends "data:audio/webm;base64,<data>" or just raw base64
         if "," in audio_base64:
-            encoded_data = audio_base64.split(",", 1)[1]
+            header, encoded_data = audio_base64.split(",", 1)
         else:
             encoded_data = audio_base64
-            
+
         audio_bytes = base64.b64decode(encoded_data)
-        
-        # 2. Load with librosa using soundfile backend via memory buffer
-        with io.BytesIO(audio_bytes) as buf:
-            y, sr = librosa.load(buf, sr=16000)
-            
-        # 3. Extract Acoustic Features (MFCCs and Pitch)
+
+        # ── 2. CONVERT WEBM → WAV using ffmpeg (via pydub) ───────────────────────
+        # browsers record as audio/webm which librosa can't read directly
+        from pydub import AudioSegment
+        import tempfile, os
+
+        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp_in:
+            tmp_in.write(audio_bytes)
+            tmp_webm_path = tmp_in.name
+
+        tmp_wav_path = tmp_webm_path.replace(".webm", ".wav")
+
+        try:
+            audio_seg = AudioSegment.from_file(tmp_webm_path)
+            audio_seg = audio_seg.set_channels(1).set_frame_rate(16000)
+            audio_seg.export(tmp_wav_path, format="wav")
+
+            # ── 3. LOAD WITH LIBROSA ──────────────────────────────────────────────
+            y, sr = librosa.load(tmp_wav_path, sr=16000)
+        finally:
+            # Always clean up temp files
+            if os.path.exists(tmp_webm_path):
+                os.remove(tmp_webm_path)
+            if os.path.exists(tmp_wav_path):
+                os.remove(tmp_wav_path)
+
+        # Too short — not enough signal to analyze
+        if len(y) < sr * 2:
+            print("Audio too short (< 2 seconds), returning neutral prediction.")
+            return {
+                "risk_level": "minimal",
+                "confidence": 0.5,
+                "probabilities": {"minimal": 0.55, "mild": 0.25, "moderate": 0.15, "severe": 0.05}
+            }
+
+        # ── 4. EXTRACT ACOUSTIC FEATURES ─────────────────────────────────────────
+        # MFCCs — captures timbre / vocal quality
         mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         mfcc_mean = np.mean(mfccs, axis=1)
-        
+        mfcc_std  = np.std(mfccs, axis=1)
+
+        # Pitch (F0) — captures monotony, a known depression marker
         pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
-        pitch_mean = np.mean(pitches[pitches > 0]) if np.any(pitches > 0) else 0.0
-        
-        print(f"Extracted Audio Features - MFCC Mean Shape: {mfcc_mean.shape}, Pitch Mean: {pitch_mean:.2f}Hz")
-        
-        # 4. MOCK INFERENCE LOGIC
-        # Replace this with: model(torch.tensor(mfcc_mean)) once trained!
-        # For now, we simulate a model that uses pitch to guess depression
-        # (Lower pitch variance / monotone voice is often correlated with severe depression in DAIC-WOZ)
-        
-        if pitch_mean < 120.0 and len(y) > sr * 3: # If monotone and > 3 seconds
+        voiced_pitches = pitches[pitches > 50]  # Remove unvoiced frames
+        pitch_mean = float(np.mean(voiced_pitches)) if len(voiced_pitches) > 0 else 0.0
+        pitch_std  = float(np.std(voiced_pitches))  if len(voiced_pitches) > 0 else 0.0
+
+        # Speech rate proxy — zero-crossing rate
+        zcr = float(np.mean(librosa.feature.zero_crossing_rate(y=y)))
+
+        # RMS energy — volume/loudness
+        rms = float(np.mean(librosa.feature.rms(y=y)))
+
+        print(f"Audio features — Pitch: {pitch_mean:.1f}Hz±{pitch_std:.1f} | ZCR: {zcr:.4f} | RMS: {rms:.4f}")
+
+        # ── 5. MOCK INFERENCE LOGIC (Replace with model once trained) ─────────────
+        # Depression acoustic markers from DAIC-WOZ literature:
+        #   - Lower mean pitch
+        #   - Lower pitch variance (monotone)
+        #   - Lower speech rate
+        #   - Lower energy/loudness
+        depression_score = 0.0
+
+        # Pitch contribution (lower = more depressed)
+        if pitch_mean < 100:
+            depression_score += 2.0
+        elif pitch_mean < 150:
+            depression_score += 1.0
+        elif pitch_mean < 200:
+            depression_score += 0.3
+
+        # Pitch variance (monotone = more depressed)
+        if pitch_std < 30:
+            depression_score += 1.5
+        elif pitch_std < 60:
+            depression_score += 0.5
+
+        # Energy (low energy = more depressed)
+        if rms < 0.02:
+            depression_score += 1.0
+        elif rms < 0.05:
+            depression_score += 0.3
+
+        # Map score to severity
+        if depression_score >= 3.5:
             severity = "severe"
-            confidence = 0.75
-            probs = {"minimal": 0.05, "mild": 0.1, "moderate": 0.1, "severe": 0.75}
-        elif pitch_mean < 180.0:
+            conf = 0.72
+            probs = {"minimal": 0.05, "mild": 0.10, "moderate": 0.13, "severe": 0.72}
+        elif depression_score >= 2.0:
             severity = "moderate"
-            confidence = 0.60
-            probs = {"minimal": 0.1, "mild": 0.2, "moderate": 0.6, "severe": 0.1}
+            conf = 0.60
+            probs = {"minimal": 0.10, "mild": 0.20, "moderate": 0.60, "severe": 0.10}
+        elif depression_score >= 1.0:
+            severity = "mild"
+            conf = 0.55
+            probs = {"minimal": 0.20, "mild": 0.55, "moderate": 0.20, "severe": 0.05}
         else:
             severity = "minimal"
-            confidence = 0.80
-            probs = {"minimal": 0.8, "mild": 0.1, "moderate": 0.05, "severe": 0.05}
-            
+            conf = 0.75
+            probs = {"minimal": 0.75, "mild": 0.15, "moderate": 0.07, "severe": 0.03}
+
         return {
             "risk_level": severity,
-            "confidence": confidence,
+            "confidence": conf,
             "probabilities": probs
         }
-        
+
     except Exception as e:
         print(f"Audio processing error: {e}")
-        # Fallback if audio fails to parse
+        # Graceful fallback — do not let audio crash the whole prediction
         return {
             "risk_level": "minimal",
-            "confidence": 1.0,
-            "probabilities": {"minimal": 1.0, "mild": 0.0, "moderate": 0.0, "severe": 0.0}
+            "confidence": 0.5,
+            "probabilities": {"minimal": 0.55, "mild": 0.25, "moderate": 0.15, "severe": 0.05}
         }
