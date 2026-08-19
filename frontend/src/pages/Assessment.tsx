@@ -6,6 +6,7 @@ import { Card, CardContent } from '../components/ui/Card';
 import { Progress } from '../components/ui/Progress';
 import { ArrowRight, ArrowLeft, CheckCircle, Mic, Square, Trash2, SkipForward, AlertCircle } from 'lucide-react';
 import { usePredictFused } from '../hooks/useAssessment';
+import { AudioWaveformVisualizer } from '../components/tools/AudioWaveformVisualizer';
 
 const phqQuestions = [
   "Little interest or pleasure in doing things?",
@@ -286,8 +287,9 @@ export default function Assessment() {
                       <div className="text-center">
                         {isRecording ? (
                           <>
-                            <p className="text-red-400 font-semibold text-lg">Recording — {formatTime(recordingSeconds)}</p>
-                            <p className="text-gray-500 text-sm mt-1">Click the button to stop</p>
+                            <p className="text-red-400 font-semibold text-lg mb-2">Recording — {formatTime(recordingSeconds)}</p>
+                            <AudioWaveformVisualizer isRecording={isRecording} />
+                            <p className="text-gray-500 text-sm mt-3">Click the button to stop</p>
                           </>
                         ) : (
                           <>

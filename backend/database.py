@@ -3,14 +3,27 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from config import settings
 
-# Create engine — connection pool handles multiple requests
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_size=10,           # Max 10 simultaneous connections
-    max_overflow=20,        # Allow 20 more during spikes
-    pool_pre_ping=True,     # Test connection before using (prevents stale connections)
-    echo=settings.DEBUG,    # Log SQL queries in development
-)
+connect_args = {}
+if settings.DATABASE_URL.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+
+try:
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+        echo=settings.DEBUG,
+    )
+    with engine.connect() as conn:
+        pass
+except Exception as e:
+    print(f"Primary DB connection failed ({e}). Falling back to local SQLite database.")
+    engine = create_engine(
+        "sqlite:///./mental_health.db",
+        connect_args={"check_same_thread": False},
+        echo=settings.DEBUG,
+    )
 
 # Session factory — create one session per request
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

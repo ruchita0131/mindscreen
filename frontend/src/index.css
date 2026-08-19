@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -7,11 +7,61 @@
   --color-brand-navy: #0D1B2A;
   --color-brand-amber: #E9C46A;
   --color-brand-coral: #E76F51;
+  --color-brand-green: #2DC653;
+  --color-brand-purple: #7B2FBE;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
   body {
     @apply bg-[#0D1B2A] text-white font-sans;
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, rgba(10, 147, 150, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(123, 47, 190, 0.06) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(10, 147, 150, 0.4);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(10, 147, 150, 0.6);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 border border-white/10 backdrop-blur-xl;
+  }
+  .glass-card {
+    @apply bg-white/[0.04] border border-white/10 backdrop-blur-xl rounded-2xl;
+  }
+  .glow-teal {
+    box-shadow: 0 0 20px rgba(10, 147, 150, 0.3);
+  }
+  .glow-amber {
+    box-shadow: 0 0 20px rgba(233, 196, 106, 0.3);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #94D2BD 0%, #0A9396 40%, #E9C46A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .animate-in {
+    animation: fadeSlideIn 0.5s ease-out both;
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }

@@ -1,15 +1,75 @@
 import base64
 import io
+import os
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 import librosa
 
+# ── 1. PYTORCH AUDIO MODEL ARCHITECTURE ───────────────────────────────
+class AudioMLP(nn.Module):
+    def __init__(self, input_dim=30, num_classes=4):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(64, num_classes)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+# ── 2. LOAD TRAINED CHECKPOINT ─────────────────────────────────────────
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "ml_models", "audio_model.pt")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+model = None
+scaler_mean = None
+scaler_scale = None
+id2label = {0: "minimal", 1: "mild", 2: "moderate", 3: "severe"}
+
+def load_audio_model():
+    global model, scaler_mean, scaler_scale, id2label
+    if not os.path.exists(MODEL_PATH):
+        print(f"⚠️ Audio model checkpoint not found at {MODEL_PATH}")
+        return
+
+    try:
+        checkpoint = torch.load(MODEL_PATH, map_location=device)
+        input_dim = checkpoint.get("input_dim", 30)
+        num_classes = checkpoint.get("num_classes", 4)
+
+        model = AudioMLP(input_dim=input_dim, num_classes=num_classes)
+        model.load_state_dict(checkpoint["model_state"])
+        model.to(device)
+        model.eval()
+
+        scaler_mean = np.array(checkpoint["scaler_mean"], dtype=np.float32)
+        scaler_scale = np.array(checkpoint["scaler_scale"], dtype=np.float32)
+        if "id2label" in checkpoint:
+            id2label = checkpoint["id2label"]
+
+        print(f"DAIC-WOZ PyTorch Audio Model loaded successfully from {MODEL_PATH} (Val Acc: {checkpoint.get('val_acc', 0)*100:.1f}%)")
+    except Exception as e:
+        print(f"Failed to load PyTorch audio model: {e}")
+        model = None
+
+# Attempt to load model on module import
+load_audio_model()
+
+# ── 3. AUDIO INFERENCE ENGINE ──────────────────────────────────────────
 def get_audio_prediction(audio_base64: str) -> dict:
     """
     Extracts acoustic features from base64-encoded audio (WebM/WAV/MP3)
-    and returns a risk prediction.
-    Once a DAIC-WOZ audio model is trained, swap the mock logic section.
+    and predicts depression severity using the trained PyTorch DAIC-WOZ Audio Model.
     """
-    # No audio provided — treat as neutral/minimal, let text + PHQ carry the weight
     if not audio_base64:
         return {
             "risk_level": "minimal",
@@ -18,19 +78,17 @@ def get_audio_prediction(audio_base64: str) -> dict:
         }
 
     try:
-        # ── 1. DECODE BASE64 ──────────────────────────────────────────────────────
-        # Browser sends "data:audio/webm;base64,<data>" or just raw base64
+        # Decode base64
         if "," in audio_base64:
-            header, encoded_data = audio_base64.split(",", 1)
+            encoded_data = audio_base64.split(",", 1)[1]
         else:
             encoded_data = audio_base64
 
         audio_bytes = base64.b64decode(encoded_data)
 
-        # ── 2. CONVERT WEBM → WAV using ffmpeg (via pydub) ───────────────────────
-        # browsers record as audio/webm which librosa can't read directly
+        # Convert WebM → WAV via pydub
         from pydub import AudioSegment
-        import tempfile, os
+        import tempfile
 
         with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp_in:
             tmp_in.write(audio_bytes)
@@ -43,101 +101,87 @@ def get_audio_prediction(audio_base64: str) -> dict:
             audio_seg = audio_seg.set_channels(1).set_frame_rate(16000)
             audio_seg.export(tmp_wav_path, format="wav")
 
-            # ── 3. LOAD WITH LIBROSA ──────────────────────────────────────────────
+            # Load with librosa
             y, sr = librosa.load(tmp_wav_path, sr=16000)
         finally:
-            # Always clean up temp files
             if os.path.exists(tmp_webm_path):
                 os.remove(tmp_webm_path)
             if os.path.exists(tmp_wav_path):
                 os.remove(tmp_wav_path)
 
-        # Too short — not enough signal to analyze
         if len(y) < sr * 2:
-            print("Audio too short (< 2 seconds), returning neutral prediction.")
+            print("Audio clip too short (< 2 seconds), returning default prediction.")
             return {
                 "risk_level": "minimal",
                 "confidence": 0.5,
                 "probabilities": {"minimal": 0.55, "mild": 0.25, "moderate": 0.15, "severe": 0.05}
             }
 
-        # ── 4. EXTRACT ACOUSTIC FEATURES ─────────────────────────────────────────
-        # MFCCs — captures timbre / vocal quality
+        # Extract 30 acoustic features (pitch_mean, pitch_std, zcr, rms, 13 mfcc means, 13 mfcc stds)
         mfccs = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
         mfcc_mean = np.mean(mfccs, axis=1)
         mfcc_std  = np.std(mfccs, axis=1)
 
-        # Pitch (F0) — captures monotony, a known depression marker
-        pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
-        voiced_pitches = pitches[pitches > 50]  # Remove unvoiced frames
-        pitch_mean = float(np.mean(voiced_pitches)) if len(voiced_pitches) > 0 else 0.0
-        pitch_std  = float(np.std(voiced_pitches))  if len(voiced_pitches) > 0 else 0.0
+        pitches, _ = librosa.piptrack(y=y, sr=sr)
+        voiced = pitches[pitches > 50]
+        pitch_mean = float(np.mean(voiced)) if len(voiced) > 0 else 0.0
+        pitch_std  = float(np.std(voiced))  if len(voiced) > 0 else 0.0
 
-        # Speech rate proxy — zero-crossing rate
         zcr = float(np.mean(librosa.feature.zero_crossing_rate(y=y)))
-
-        # RMS energy — volume/loudness
         rms = float(np.mean(librosa.feature.rms(y=y)))
 
-        print(f"Audio features — Pitch: {pitch_mean:.1f}Hz±{pitch_std:.1f} | ZCR: {zcr:.4f} | RMS: {rms:.4f}")
+        feat_vector = np.concatenate([[pitch_mean, pitch_std, zcr, rms], mfcc_mean, mfcc_std]).astype(np.float32)
 
-        # ── 5. MOCK INFERENCE LOGIC (Replace with model once trained) ─────────────
-        # Depression acoustic markers from DAIC-WOZ literature:
-        #   - Lower mean pitch
-        #   - Lower pitch variance (monotone)
-        #   - Lower speech rate
-        #   - Lower energy/loudness
-        depression_score = 0.0
+        # Run PyTorch Model Inference
+        if model is not None and scaler_mean is not None and scaler_scale is not None:
+            # Standardize
+            feat_scaled = (feat_vector - scaler_mean) / (scaler_scale + 1e-8)
+            tensor_in = torch.tensor(feat_scaled, dtype=torch.float32).unsqueeze(0).to(device)
 
-        # Pitch contribution (lower = more depressed)
-        if pitch_mean < 100:
-            depression_score += 2.0
-        elif pitch_mean < 150:
-            depression_score += 1.0
-        elif pitch_mean < 200:
-            depression_score += 0.3
+            with torch.no_grad():
+                logits = model(tensor_in)
+                probs_tensor = F.softmax(logits, dim=1).cpu().numpy()[0]
 
-        # Pitch variance (monotone = more depressed)
-        if pitch_std < 30:
-            depression_score += 1.5
-        elif pitch_std < 60:
-            depression_score += 0.5
+            probs = {
+                "minimal": float(probs_tensor[0]),
+                "mild": float(probs_tensor[1]),
+                "moderate": float(probs_tensor[2]),
+                "severe": float(probs_tensor[3])
+            }
+            pred_idx = int(np.argmax(probs_tensor))
+            risk_level = id2label.get(pred_idx, "minimal")
+            confidence = float(probs_tensor[pred_idx])
 
-        # Energy (low energy = more depressed)
-        if rms < 0.02:
-            depression_score += 1.0
-        elif rms < 0.05:
-            depression_score += 0.3
-
-        # Map score to severity
-        if depression_score >= 3.5:
-            severity = "severe"
-            conf = 0.72
-            probs = {"minimal": 0.05, "mild": 0.10, "moderate": 0.13, "severe": 0.72}
-        elif depression_score >= 2.0:
-            severity = "moderate"
-            conf = 0.60
-            probs = {"minimal": 0.10, "mild": 0.20, "moderate": 0.60, "severe": 0.10}
-        elif depression_score >= 1.0:
-            severity = "mild"
-            conf = 0.55
-            probs = {"minimal": 0.20, "mild": 0.55, "moderate": 0.20, "severe": 0.05}
+            print(f"✅ PyTorch Audio Model prediction: {risk_level.upper()} ({confidence*100:.1f}% confidence)")
+            return {
+                "risk_level": risk_level,
+                "confidence": confidence,
+                "probabilities": probs
+            }
         else:
-            severity = "minimal"
-            conf = 0.75
-            probs = {"minimal": 0.75, "mild": 0.15, "moderate": 0.07, "severe": 0.03}
-
-        return {
-            "risk_level": severity,
-            "confidence": conf,
-            "probabilities": probs
-        }
+            # Fallback heuristic if model file not available
+            return _fallback_heuristic(pitch_mean, pitch_std, rms)
 
     except Exception as e:
         print(f"Audio processing error: {e}")
-        # Graceful fallback — do not let audio crash the whole prediction
         return {
             "risk_level": "minimal",
             "confidence": 0.5,
             "probabilities": {"minimal": 0.55, "mild": 0.25, "moderate": 0.15, "severe": 0.05}
         }
+
+def _fallback_heuristic(pitch_mean, pitch_std, rms):
+    depression_score = 0.0
+    if pitch_mean < 100:   depression_score += 2.0
+    elif pitch_mean < 150: depression_score += 1.0
+    if pitch_std < 30:     depression_score += 1.5
+    if rms < 0.02:         depression_score += 1.0
+
+    if depression_score >= 3.5:
+        return {"risk_level": "severe", "confidence": 0.72, "probabilities": {"minimal": 0.05, "mild": 0.10, "moderate": 0.13, "severe": 0.72}}
+    elif depression_score >= 2.0:
+        return {"risk_level": "moderate", "confidence": 0.60, "probabilities": {"minimal": 0.10, "mild": 0.20, "moderate": 0.60, "severe": 0.10}}
+    elif depression_score >= 1.0:
+        return {"risk_level": "mild", "confidence": 0.55, "probabilities": {"minimal": 0.20, "mild": 0.55, "moderate": 0.20, "severe": 0.05}}
+    else:
+        return {"risk_level": "minimal", "confidence": 0.75, "probabilities": {"minimal": 0.75, "mild": 0.15, "moderate": 0.07, "severe": 0.03}}

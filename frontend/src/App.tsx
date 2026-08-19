@@ -4,12 +4,19 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
+import Landing from './pages/Landing';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Assessment from './pages/Assessment';
 import Results from './pages/Results';
+import History from './pages/History';
+import MoodTracker from './pages/MoodTracker';
+import CounselorDashboard from './pages/CounselorDashboard';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 5 * 60 * 1000 } },
+});
 
 export default function App() {
   return (
@@ -17,16 +24,25 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/login" element={<Login />} />
-            
+            {/* Public */}
+            <Route path="/"         element={<Landing />} />
+            <Route path="/login"    element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            {/* Protected / App Layout */}
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout />}>
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard"  element={<Dashboard />} />
                 <Route path="/assessment" element={<Assessment />} />
-                <Route path="/results" element={<Results />} />
+                <Route path="/results"    element={<Results />} />
+                <Route path="/history"    element={<History />} />
+                <Route path="/mood"       element={<MoodTracker />} />
+                <Route path="/counselor"  element={<CounselorDashboard />} />
               </Route>
             </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

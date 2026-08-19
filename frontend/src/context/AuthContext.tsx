@@ -12,16 +12,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>({
+    id: 1,
+    email: 'demo@mindscreen.ai',
+    role: 'student',
+    has_consented: true,
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      getMe().then(setUser).catch(() => logoutUser()).finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
+    // Demo mode: Do nothing, user is already set
   }, []);
 
   const loginUser = (token: string, refresh: string) => {

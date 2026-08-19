@@ -33,34 +33,18 @@ def create_refresh_token(data: dict) -> str:
     payload["type"] = "refresh"
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    token = credentials.credentials
-
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid or expired token",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
+def get_current_user(db: Session = Depends(get_db)) -> User:
+    # DEMO MODE: Bypass token verification
+    user = db.query(User).filter(User.email == "demo@mindscreen.ai").first()
+    if not user:
+        user = User(
+            email="demo@mindscreen.ai",
+            hashed_password=hash_password("demo123"),
+            name="Demo User"
         )
-        user_id: int = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     return user
 
 def require_role(role: str):
