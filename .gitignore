@@ -4,6 +4,8 @@
 .env.production
 backend/.env
 frontend/.env
+# Allow frontend prod env (only contains public backend URL, no secrets)
+!frontend/.env.production
 
 # Python
 __pycache__/
