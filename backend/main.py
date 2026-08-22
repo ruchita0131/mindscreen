@@ -25,13 +25,6 @@ from fastapi.responses import RedirectResponse
 def root():
     return RedirectResponse(url="/docs")
 
-    title="MindScreen API",
-    description="Mental Health Screening Platform — RVITM BCS685",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
-
 # Rate Limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
