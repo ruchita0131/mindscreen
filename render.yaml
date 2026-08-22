@@ -7,14 +7,29 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4
       - key: DATABASE_URL
-        sync: false          # You will set this in the Render dashboard
+        sync: false          # Set this in the Render dashboard (Postgres URL)
       - key: SECRET_KEY
         generateValue: true  # Render auto-generates a strong random secret
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 1440
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
       - key: HF_TOKEN
-        sync: false          # Your Hugging Face token (set in Render dashboard)
+        sync: false          # Set your Hugging Face token in the Render dashboard
       - key: ENVIRONMENT
         value: production
+      - key: DEBUG
+        value: "false"
       - key: ALLOWED_ORIGINS
         value: https://mindscreen.vercel.app
-    autoDeploy: true
+      - key: CRISIS_HELPLINE_1
+        value: "iCall: 9152987821"
+      - key: CRISIS_HELPLINE_2
+        value: "NIMHANS: 080-46110007"
+      - key: CRISIS_HELPLINE_3
+        value: "Vandrevala Foundation: 1860-2662-345"
