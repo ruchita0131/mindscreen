@@ -3,186 +3,276 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { SereneMoonBackground } from '../components/ui/SereneMoonBackground';
-import { Brain, Mic, ClipboardList, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Brain, Mic, ClipboardList, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
 
-  // At scroll Y=0: moon is a perfect hemisphere filling the bottom half of screen
-  // Text is hidden (opacity 0, slightly pushed down)
-  // As user scrolls 0 -> 500px: moon recedes downward, text fades & slides UP into view
-  const textOpacity = useTransform(scrollY, [80, 380], [0, 1]);
-  const textY = useTransform(scrollY, [80, 380], [40, 0]);
-
-  // Scroll label fades OUT as user starts scrolling
-  const scrollLabelOpacity = useTransform(scrollY, [0, 120], [1, 0]);
+  // At scroll=0: moon fills the screen bottom half, text is invisible
+  // 100px → 420px of scroll: moon recedes, text fades in upward
+  const heroOpacity  = useTransform(scrollY, [100, 420], [0, 1]);
+  const heroY        = useTransform(scrollY, [100, 420], [50, 0]);
+  const scrollHintOp = useTransform(scrollY, [0, 100], [1, 0]);
 
   return (
-    <div className="min-h-[300vh] bg-[#161722] text-slate-100 overflow-x-hidden relative font-sans">
-      {/* Casa Di Solare Style Realistic Moon Background with Scroll Scale */}
+    <div className="bg-[#F0E8D8] text-[#3D3128] overflow-x-hidden relative font-sans">
       <SereneMoonBackground />
 
-      {/* ── STICKY HERO VIEWPORT ── (100vh sticky so content scrolls behind moon) */}
+      {/* ══════════════════════════════════════
+          STICKY HERO  — moon recedes, text reveals
+          ══════════════════════════════════════ */}
       <div className="sticky top-0 h-screen overflow-hidden z-10">
 
-        {/* Navigation Bar — always visible */}
-        <nav className="relative z-30 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
+        {/* NAV */}
+        <nav className="relative z-30 flex items-center justify-between px-6 sm:px-10 py-6 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center backdrop-blur-xl">
-              <Brain className="text-[#A3CEF1] w-6 h-6" />
-            </div>
-            <span className="text-2xl font-bold tracking-tight text-gradient">MindScreen</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() => navigate('/dashboard')}
-              className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold shadow-[0_0_25px_rgba(129,178,154,0.35)] transition-all rounded-full px-6 py-2.5 text-sm"
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: 'rgba(61,49,40,0.08)', border: '1px solid rgba(61,49,40,0.15)' }}
             >
-              Enter Sanctuary
-            </Button>
+              <Brain className="w-5 h-5 text-[#5A7A9A]" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-[#3D3128]">MindScreen</span>
           </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="text-sm font-semibold px-5 py-2.5 rounded-full transition-all"
+            style={{
+              background: '#3D3128',
+              color: '#F0E8D8',
+              boxShadow: '0 4px 20px rgba(61,49,40,0.25)',
+            }}
+          >
+            Enter →
+          </button>
         </nav>
 
-        {/* ── HERO CONTENT — fades in as moon recedes ── */}
+        {/* HERO TEXT — revealed by scroll */}
         <motion.div
-          style={{ opacity: textOpacity, y: textY }}
-          className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 z-20 pb-24"
+          className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 z-20"
+          style={{ opacity: heroOpacity, y: heroY, paddingBottom: '8vh' }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-white/10 mb-6 backdrop-blur-xl shadow-lg">
-            <Sparkles className="w-4 h-4 text-[#E8D5B7] animate-pulse" />
-            <span className="text-xs font-semibold tracking-widest text-[#E8D5B7] uppercase">
-              Multimodal Mental Wellness Screening
-            </span>
+          {/* Pill badge */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold tracking-widest uppercase mb-8"
+            style={{
+              background: 'rgba(61,49,40,0.07)',
+              border: '1px solid rgba(61,49,40,0.14)',
+              color: '#7A6E65',
+            }}
+          >
+            AI-Powered Mental Wellness
           </div>
 
-          <h1 className="text-5xl sm:text-7xl md:text-9xl font-black tracking-tight leading-[1.0] mb-6 max-w-5xl">
-            AI-Powered
+          {/* Giant editorial headline */}
+          <h1
+            className="font-black leading-[0.92] tracking-[-0.04em] mb-6"
+            style={{ fontSize: 'clamp(3.5rem, 11vw, 9rem)', color: '#3D3128' }}
+          >
+            Mind
             <br />
-            <span className="text-gradient">MindScreen</span>
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #8B6E50 0%, #5A7A9A 55%, #8870A8 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Screen
+            </span>
           </h1>
 
-          <p className="text-base sm:text-xl text-slate-300/90 mb-10 leading-relaxed max-w-2xl font-normal">
-            A serene mental health platform integrating PHQ-9 clinical metrics, MentalBERT NLP, and voice acoustics.
+          <p
+            className="max-w-lg text-base sm:text-lg leading-relaxed mb-10"
+            style={{ color: '#7A6E65' }}
+          >
+            A serene screening platform combining PHQ-9 clinical assessment,
+            MentalBERT text intelligence, and vocal acoustic analysis.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <button
               onClick={() => navigate('/dashboard')}
-              className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-base px-8 py-5 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.4)] transition-all flex items-center gap-2 w-full sm:w-auto"
+              className="flex items-center gap-2 px-7 py-3.5 rounded-full text-sm font-bold transition-all"
+              style={{
+                background: '#3D3128',
+                color: '#F0E8D8',
+                boxShadow: '0 8px 32px rgba(61,49,40,0.30)',
+              }}
             >
-              Start Assessment <ArrowRight className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => window.scrollTo({ top: 1400, behavior: 'smooth' })}
-              className="border-white/15 text-slate-200 hover:bg-white/10 text-base px-8 py-5 rounded-full w-full sm:w-auto transition-all backdrop-blur-xl"
+              Begin Assessment <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => window.scrollTo({ top: window.innerHeight + 200, behavior: 'smooth' })}
+              className="px-7 py-3.5 rounded-full text-sm font-semibold transition-all"
+              style={{
+                background: 'rgba(61,49,40,0.07)',
+                border: '1px solid rgba(61,49,40,0.18)',
+                color: '#3D3128',
+              }}
             >
               Discover Features
-            </Button>
+            </button>
           </div>
         </motion.div>
 
-        {/* ── SCROLL PROMPT — visible only at very top, fades when scrolling ── */}
+        {/* SCROLL HINT */}
         <motion.div
-          style={{ opacity: scrollLabelOpacity }}
+          style={{ opacity: scrollHintOp }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 text-center"
         >
-          <p className="text-xs uppercase tracking-widest text-[#E8D5B7]/90 font-semibold drop-shadow-sm mb-3">
+          <p
+            className="text-[10px] uppercase tracking-[0.2em] font-semibold mb-3"
+            style={{ color: '#A89E95' }}
+          >
             Scroll to reveal
           </p>
-          <div className="w-5 h-8 border-2 border-[#E8D5B7]/50 rounded-full mx-auto flex justify-center p-1">
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-1.5 h-1.5 bg-[#E8D5B7] rounded-full"
-            />
-          </div>
+          <div
+            className="w-[1px] h-10 mx-auto"
+            style={{ background: 'linear-gradient(to bottom, #A89E95, transparent)' }}
+          />
         </motion.div>
       </div>
 
-      {/* ── SCROLLABLE CONTENT BELOW STICKY HERO ── */}
-      <main className="relative z-20 max-w-7xl mx-auto px-6 pb-24">
+      {/* ══════════════════════════════════════
+          SCROLLABLE CONTENT below sticky hero
+          ══════════════════════════════════════ */}
+      <main
+        className="relative z-20 max-w-7xl mx-auto px-6 sm:px-10"
+        style={{ marginTop: '100vh' }}
+      >
 
-        {/* FEATURES SECTION */}
-        <section className="py-28">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-slate-100">
-              A Holistic Tri-Modal Approach
+        {/* INTRO STATEMENT */}
+        <section className="py-24 text-center max-w-3xl mx-auto">
+          <p
+            className="text-2xl sm:text-3xl font-light leading-relaxed"
+            style={{ color: '#5A4A3A' }}
+          >
+            A calm, clinical approach to early mental wellness screening —
+            designed to feel as{' '}
+            <em className="not-italic font-medium" style={{ color: '#5A7A9A' }}>gentle</em>{' '}
+            as it is insightful.
+          </p>
+        </section>
+
+        {/* FEATURES */}
+        <section className="py-16 pb-28">
+          <div className="text-center mb-14">
+            <h2
+              className="font-black tracking-tight leading-[1.0] mb-4"
+              style={{ fontSize: 'clamp(2.2rem, 5vw, 4rem)', color: '#3D3128' }}
+            >
+              A Tri-Modal Approach
             </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
-              Desaturated, clinical-grade analysis combining subjective responses, text semantics, and vocal biomarkers.
+            <p className="text-base" style={{ color: '#7A6E65' }}>
+              Three lenses of analysis, one unified result.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
                 icon: ClipboardList,
-                title: 'PHQ-9 Clinical Questionnaire',
-                desc: 'Standardized 9-question depression severity metric used by healthcare professionals worldwide.',
-                color: 'text-[#A3CEF1]',
-                bg: 'bg-blue-500/10',
-                border: 'border-blue-500/20'
+                num: '01',
+                title: 'PHQ-9 Questionnaire',
+                desc: 'Standardised 9-question depression scale, clinically validated and trusted globally.',
+                accent: '#5A7A9A',
+                bg: 'rgba(90, 122, 154, 0.08)',
+                border: 'rgba(90, 122, 154, 0.18)',
               },
               {
                 icon: Brain,
-                title: 'MentalBERT Text Analysis',
-                desc: 'Specialized transformer model fine-tuned on mental health domain texts for subtle sentiment extraction.',
-                color: 'text-[#81B29A]',
-                bg: 'bg-emerald-500/10',
-                border: 'border-emerald-500/20'
+                num: '02',
+                title: 'MentalBERT Analysis',
+                desc: 'Domain-fine-tuned transformer model extracts subtle linguistic markers from your writing.',
+                accent: '#7A9E8E',
+                bg: 'rgba(122, 158, 142, 0.08)',
+                border: 'rgba(122, 158, 142, 0.18)',
               },
               {
                 icon: Mic,
+                num: '03',
                 title: 'Voice Acoustic Biomarkers',
-                desc: 'Extracts pitch variability, MFCCs, and spectral energy to identify acoustic indicators of distress.',
-                color: 'text-[#C6ACD6]',
-                bg: 'bg-purple-500/10',
-                border: 'border-purple-500/20'
-              }
-            ].map((feature, i) => (
+                desc: 'MFCC, pitch variance, and spectral analysis identify acoustic stress signatures.',
+                accent: '#8870A8',
+                bg: 'rgba(136, 112, 168, 0.08)',
+                border: 'rgba(136, 112, 168, 0.18)',
+              },
+            ].map((f, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 25 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
+                transition={{ duration: 0.55, delay: i * 0.12 }}
                 viewport={{ once: true }}
-                className="glass-card p-8 hover:-translate-y-1.5 transition-transform duration-300"
+                className="p-8 rounded-2xl transition-transform duration-300 hover:-translate-y-1"
+                style={{ background: f.bg, border: `1px solid ${f.border}` }}
               >
-                <div className={`w-14 h-14 rounded-2xl ${feature.bg} border ${feature.border} flex items-center justify-center mb-6`}>
-                  <feature.icon className={`w-7 h-7 ${feature.color}`} />
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+                  style={{ background: `${f.accent}18`, border: `1px solid ${f.accent}30` }}
+                >
+                  <f.icon className="w-6 h-6" style={{ color: f.accent }} />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-100">{feature.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
+                <div
+                  className="text-xs font-bold tracking-widest uppercase mb-2"
+                  style={{ color: '#A89E95' }}
+                >
+                  {f.num}
+                </div>
+                <h3 className="text-lg font-bold mb-3" style={{ color: '#3D3128' }}>
+                  {f.title}
+                </h3>
+                <p className="text-sm leading-relaxed" style={{ color: '#7A6E65' }}>
+                  {f.desc}
+                </p>
               </motion.div>
             ))}
           </div>
         </section>
 
-        {/* HOW IT WORKS SECTION */}
-        <section className="py-20 mb-20">
-          <div className="glass p-10 sm:p-14 rounded-3xl border-white/10 relative overflow-hidden">
-            <div className="text-center mb-16 relative z-10">
-              <h2 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-slate-100">
-                How MindScreen Works
+        {/* HOW IT WORKS */}
+        <section className="py-16 mb-24">
+          <div
+            className="rounded-3xl p-10 sm:p-16"
+            style={{
+              background: 'rgba(61,49,40,0.04)',
+              border: '1px solid rgba(61,49,40,0.10)',
+            }}
+          >
+            <div className="text-center mb-14">
+              <h2
+                className="font-black tracking-tight leading-[1.0] mb-3"
+                style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)', color: '#3D3128' }}
+              >
+                How it works
               </h2>
-              <p className="text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
-                3 effortless steps to complete your wellness screening session.
+              <p className="text-sm" style={{ color: '#7A6E65' }}>
+                Three steps. Fifteen minutes. Meaningful insight.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {[
-                { step: '01', title: 'Complete PHQ-9', desc: 'Select ratings for 9 clinical questions regarding your recent mood and energy levels.' },
-                { step: '02', title: 'Write Your Thoughts', desc: 'Express your feelings in a short journal response. MentalBERT analyzes semantic patterns.' },
-                { step: '03', title: 'Voice Check-In', desc: 'Speak naturally for 15-30 seconds. Audio feature extraction measures acoustic stability.' }
-              ].map((item, i) => (
-                <div key={i} className="relative">
-                  {i < 2 && <div className="hidden md:block absolute top-10 left-[60%] w-full h-[1px] bg-gradient-to-r from-slate-700/50 to-transparent" />}
-                  <div className="text-5xl font-black text-slate-600/40 mb-3 font-mono">{item.step}</div>
-                  <h3 className="text-xl font-bold mb-2 text-slate-100">{item.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                { n: '1', title: 'Reflect',  desc: 'Answer 9 PHQ-9 questions about your recent mood, energy, and sleep.' },
+                { n: '2', title: 'Express',  desc: 'Write a short paragraph. MentalBERT reads between the lines with clinical depth.' },
+                { n: '3', title: 'Speak',    desc: 'Record 20 seconds of natural speech. Acoustic biomarkers are extracted automatically.' },
+              ].map((s, i) => (
+                <div key={i}>
+                  <div
+                    className="text-[5rem] font-black leading-none mb-4 select-none"
+                    style={{ color: 'rgba(61,49,40,0.08)' }}
+                  >
+                    {s.n}
+                  </div>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: '#3D3128' }}>
+                    {s.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: '#7A6E65' }}>
+                    {s.desc}
+                  </p>
                 </div>
               ))}
             </div>
@@ -191,25 +281,33 @@ export default function Landing() {
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/10 bg-[#12131C] relative z-20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+      <footer style={{ background: '#3D3128', color: '#C4B8A8' }}>
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 py-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8">
             <div className="flex items-center gap-2">
-              <Brain className="text-[#A3CEF1] w-5 h-5" />
-              <span className="text-xl font-bold tracking-tight text-slate-200">MindScreen</span>
+              <Brain className="w-5 h-5 text-[#8BA8C4]" />
+              <span className="font-bold text-lg text-[#F0E8D8]">MindScreen</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#81B29A] text-xs font-semibold">
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+              style={{ background: 'rgba(240,232,216,0.10)', color: '#A8C5B5' }}
+            >
               <ShieldCheck className="w-4 h-4" />
-              <span>Privacy Preserving • Confidential Analysis</span>
+              <span>Private · Confidential · Research Only</span>
             </div>
           </div>
-
-          <div className="text-center md:text-left text-xs text-slate-500 border-t border-white/5 pt-8 leading-relaxed">
+          <div
+            className="text-xs leading-relaxed border-t pt-8"
+            style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#8A7E74' }}
+          >
             <p className="mb-2">
-              <strong className="text-slate-400">Clinical Disclaimer:</strong> MindScreen is an AI-assisted screening research platform intended solely for preliminary wellness assessment. It is not a diagnostic tool and does not constitute medical advice.
+              <strong className="text-[#C4B8A8]">Disclaimer:</strong>{' '}
+              MindScreen is a research screening tool and does not constitute medical advice.
+              If you are in crisis, please contact emergency services or a mental health helpline immediately.
             </p>
-            <p>If you or someone you know is in crisis, please contact local emergency services or call a mental health crisis line immediately.</p>
-            <p className="mt-6 text-slate-600">© {new Date().getFullYear()} MindScreen Platform (RVITM BCS685). All rights reserved.</p>
+            <p className="mt-5" style={{ color: '#5A504A' }}>
+              © {new Date().getFullYear()} MindScreen · RVITM BCS685
+            </p>
           </div>
         </div>
       </footer>
