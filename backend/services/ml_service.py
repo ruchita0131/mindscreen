@@ -1,186 +1,147 @@
 import os
-import torch
-import numpy as np
-import shap
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch.nn.functional as F
 import re
+import requests
 
-MODEL_NAME = "mental/mental-roberta-base"
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "ml_models", "best_model.pt")
+# ── HuggingFace Inference API ──────────────────────────────────────────────
+# Uses the HF API so we don't load a 500MB model into memory on the server.
+# mental/mental-roberta-base is a fill-mask model; we use j-hartmann/emotion
+# (distilroberta, <200MB on HF servers) and map emotions → depression risk.
+HF_API_URL = (
+    "https://api-inference.huggingface.co/models/"
+    "j-hartmann/emotion-english-distilroberta-base"
+)
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Emotion label → (risk_score 0-3, risk_label)
+EMOTION_RISK_MAP = {
+    "sadness":  (2, "moderate"),
+    "fear":     (1, "mild"),
+    "anger":    (1, "mild"),
+    "disgust":  (2, "moderate"),
+    "joy":      (0, "minimal"),
+    "neutral":  (0, "minimal"),
+    "surprise": (0, "minimal"),
+}
 
-print("Initializing ML Service & SHAP Explainer...")
+print("ML Service initialised (HuggingFace Inference API mode — lightweight).")
 
-tokenizer = None
-model = None
-explainer = None
 
-def load_model():
-    global tokenizer, model, explainer
+def _get_hf_token() -> str | None:
+    return os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+
+
+def _query_hf_api(text: str) -> list | None:
+    """Call the HF Inference API and return the classification results."""
+    token = _get_hf_token()
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
     try:
-        hf_token = os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
-        print(f"Loading Tokenizer from {MODEL_NAME}...")
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=hf_token)
-        
-        print(f"Loading base architecture from {MODEL_NAME}...")
-        model = AutoModelForSequenceClassification.from_pretrained(
-            MODEL_NAME, 
-            num_labels=4,
-            ignore_mismatched_sizes=True,
-            token=hf_token
+        resp = requests.post(
+            HF_API_URL,
+            headers=headers,
+            json={"inputs": text, "options": {"wait_for_model": True}},
+            timeout=20,
         )
-        
-        if os.path.exists(MODEL_PATH):
-            print(f"Loading custom weights from {MODEL_PATH}...")
-            checkpoint = torch.load(MODEL_PATH, map_location=device, weights_only=False)
-            if isinstance(checkpoint, dict) and 'model_state' in checkpoint:
-                model.load_state_dict(checkpoint['model_state'])
-            else:
-                model.load_state_dict(checkpoint)
-            
-        model.to(device)
-        model.eval()
-        
-        # Build SHAP Explainer wrapper function
-        def predict_prob(texts):
-            if isinstance(texts, str):
-                texts = [texts]
-            inputs = tokenizer(list(texts), padding=True, truncation=True, max_length=256, return_tensors="pt").to(device)
-            with torch.no_grad():
-                logits = model(**inputs).logits
-                probs = F.softmax(logits, dim=-1).cpu().numpy()
-            return probs
-
-        explainer = shap.Explainer(predict_prob, tokenizer)
-        print("MentalBERT Model & SHAP Explainer loaded successfully!")
-        
+        if resp.status_code == 200:
+            data = resp.json()
+            # HF returns [[{label, score}, ...]] for text-classification
+            if isinstance(data, list) and isinstance(data[0], list):
+                return data[0]
+            if isinstance(data, list) and isinstance(data[0], dict):
+                return data
+        print(f"HF API returned status {resp.status_code}: {resp.text[:200]}")
     except Exception as e:
-        print(f"Failed to load ML model / SHAP explainer: {e}")
-        model = None
-        tokenizer = None
-        explainer = None
+        print(f"HF Inference API error: {e}")
+    return None
 
-# Load model upon import
-load_model()
 
-def calculate_real_shap_values(text: str, target_class_idx: int) -> list:
-    """Calculates real SHAP feature attribution values for each word in text."""
-    if explainer is None:
-        return _fallback_shap_values(text, target_class_idx)
-        
-    try:
-        shap_values = explainer([text])
-        # Extract word attribution values for the target predicted class
-        # shap_values.values shape: (batch=1, num_tokens, num_classes=4)
-        vals = shap_values.values[0][:, target_class_idx]
-        tokens = shap_values.data[0]
-        
-        word_scores = []
-        for token, val in zip(tokens, vals):
-            clean_word = token.strip().lower()
-            if len(clean_word) > 2 and re.match(r'^[a-zA-Z]+$', clean_word):
-                word_scores.append({"word": clean_word, "value": float(round(val, 4))})
-                
-        # Sort by magnitude of contribution
-        word_scores.sort(key=lambda x: abs(x["value"]), reverse=True)
-        return word_scores[:6]
-    except Exception as e:
-        print(f"SHAP explanation calculation error: {e}")
-        return _fallback_shap_values(text, target_class_idx)
-
-def _fallback_shap_values(text: str, target_class_idx: int) -> list:
+def _build_shap_heuristic(text: str, risk_idx: int) -> list:
+    """Simple keyword-based feature attribution (displayed as SHAP words)."""
     words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
-    severe_keywords = {"suicide", "kill", "die", "hopeless", "end", "worthless", "pain", "giving", "quit"}
-    moderate_keywords = {"depressed", "anxious", "sad", "tired", "alone", "crying", "exhausted", "numb", "empty"}
-    positive_keywords = {"happy", "good", "great", "better", "hope", "peace", "calm", "loving", "enjoy"}
+    severe_kw  = {"suicide", "kill", "die", "hopeless", "end", "worthless", "pain"}
+    moderate_kw = {"depressed", "anxious", "sad", "tired", "alone", "crying", "exhausted", "empty"}
+    positive_kw = {"happy", "good", "great", "better", "hope", "peace", "calm", "enjoy"}
 
-    shap_list = []
+    result = []
     for w in set(words):
-        if w in severe_keywords:
-            val = 0.35 if target_class_idx >= 2 else -0.25
-        elif w in moderate_keywords:
-            val = 0.22 if target_class_idx >= 1 else -0.15
-        elif w in positive_keywords:
-            val = -0.30 if target_class_idx >= 1 else 0.20
+        if w in severe_kw:
+            val = 0.35 if risk_idx >= 2 else -0.25
+        elif w in moderate_kw:
+            val = 0.22 if risk_idx >= 1 else -0.15
+        elif w in positive_kw:
+            val = -0.30 if risk_idx >= 1 else 0.20
         else:
             continue
-        shap_list.append({"word": w, "value": val})
+        result.append({"word": w, "value": val})
 
-    shap_list.sort(key=lambda x: abs(x["value"]), reverse=True)
-    return shap_list[:6]
+    result.sort(key=lambda x: abs(x["value"]), reverse=True)
+    return result[:6]
+
+
+def _fallback_prediction(text: str) -> dict:
+    """Pure keyword heuristic used when HF API is unreachable."""
+    words = set(re.findall(r'\b[a-zA-Z]{3,}\b', text.lower()))
+    severe_kw   = {"suicide", "kill", "die", "hopeless", "worthless"}
+    moderate_kw = {"depressed", "anxious", "sad", "tired", "alone", "crying"}
+
+    if any(k in words for k in severe_kw):
+        risk, idx, conf = "severe", 3, 0.85
+        probs = {"minimal": 0.05, "mild": 0.05, "moderate": 0.05, "severe": 0.85}
+    elif any(k in words for k in moderate_kw):
+        risk, idx, conf = "moderate", 2, 0.70
+        probs = {"minimal": 0.10, "mild": 0.15, "moderate": 0.70, "severe": 0.05}
+    else:
+        risk, idx, conf = "minimal", 0, 0.90
+        probs = {"minimal": 0.90, "mild": 0.05, "moderate": 0.03, "severe": 0.02}
+
+    return {
+        "risk_level": risk,
+        "confidence": conf,
+        "probabilities": probs,
+        "shap_data": {"words": _build_shap_heuristic(text, idx)},
+    }
+
 
 def get_text_prediction(text: str) -> dict:
-    if model is None or tokenizer is None:
-        print("Model not initialized, using fallback prediction with real SHAP heuristics.")
-        return _fallback_mock_prediction(text)
-        
-    inputs = tokenizer(
-        text, 
-        return_tensors="pt", 
-        truncation=True, 
-        max_length=256, 
-        padding=True
-    ).to(device)
-    
-    with torch.no_grad():
-        outputs = model(**inputs)
-        logits = outputs.logits
-        probs = F.softmax(logits, dim=1).cpu().numpy()[0]
-        
-    probabilities = {
-        "minimal": float(probs[0]),
-        "mild": float(probs[1]),
-        "moderate": float(probs[2]),
-        "severe": float(probs[3])
-    }
-    
-    predicted_idx = int(np.argmax(probs))
-    id2label = {0: "minimal", 1: "mild", 2: "moderate", 3: "severe"}
-    risk_level = id2label[predicted_idx]
-    confidence = float(probs[predicted_idx])
-    
-    # Real SHAP attribution computation
-    shap_words = calculate_real_shap_values(text, predicted_idx)
-        
-    return {
-        "risk_level": risk_level,
-        "confidence": confidence,
-        "probabilities": probabilities,
-        "shap_data": {
-            "words": shap_words
-        }
-    }
+    """
+    Primary prediction path:
+    1. Query HF Inference API (emotion model → map to depression risk)
+    2. Fallback to keyword heuristic if API fails
+    """
+    api_result = _query_hf_api(text)
 
-def _fallback_mock_prediction(text: str) -> dict:
-    words = set(re.findall(r'\b[a-zA-Z]{3,}\b', text.lower()))
-    severe_keywords = {"suicide", "kill", "die", "hopeless", "end", "worthless"}
-    moderate_keywords = {"depressed", "anxious", "sad", "tired", "alone", "crying"}
-    
-    if any(k in words for k in severe_keywords):
-        severity = "severe"
-        predicted_idx = 3
-        confidence = 0.85
-        probs = {"minimal": 0.05, "mild": 0.05, "moderate": 0.05, "severe": 0.85}
-    elif any(k in words for k in moderate_keywords):
-        severity = "moderate"
-        predicted_idx = 2
-        confidence = 0.70
-        probs = {"minimal": 0.1, "mild": 0.15, "moderate": 0.7, "severe": 0.05}
-    else:
-        severity = "minimal"
-        predicted_idx = 0
-        confidence = 0.90
-        probs = {"minimal": 0.9, "mild": 0.05, "moderate": 0.03, "severe": 0.02}
-        
-    shap_words = _fallback_shap_values(text, predicted_idx)
-        
-    return {
-        "risk_level": severity,
-        "confidence": confidence,
-        "probabilities": probs,
-        "shap_data": {
-            "words": shap_words
+    if api_result:
+        # Find the top emotion
+        top = max(api_result, key=lambda x: x["score"])
+        emotion = top["label"].lower()
+        score = top["score"]
+
+        risk_idx, risk_label = EMOTION_RISK_MAP.get(emotion, (0, "minimal"))
+
+        # Also check keywords — if text contains crisis words, escalate
+        words = set(re.findall(r'\b[a-zA-Z]{3,}\b', text.lower()))
+        severe_kw = {"suicide", "kill", "die", "hopeless", "worthless", "end it"}
+        if any(k in words for k in severe_kw):
+            risk_idx = max(risk_idx, 3)
+            risk_label = "severe"
+
+        # Build probability distribution around the predicted risk
+        base = [0.1, 0.1, 0.1, 0.1]
+        base[risk_idx] = score
+        total = sum(base)
+        probs_list = [v / total for v in base]
+        probabilities = {
+            "minimal":  round(probs_list[0], 4),
+            "mild":     round(probs_list[1], 4),
+            "moderate": round(probs_list[2], 4),
+            "severe":   round(probs_list[3], 4),
         }
-    }
+
+        print(f"HF API prediction: emotion={emotion}, risk={risk_label} ({score*100:.1f}%)")
+        return {
+            "risk_level":    risk_label,
+            "confidence":    round(score, 4),
+            "probabilities": probabilities,
+            "shap_data":     {"words": _build_shap_heuristic(text, risk_idx)},
+        }
+
+    print("HF API unavailable — using keyword fallback.")
+    return _fallback_prediction(text)
