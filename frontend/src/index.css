@@ -2,18 +2,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-twilight:    #1D1722;
-  --color-twilight-card:#261F2E;
+  --color-twilight:     #1B1622;
+  --color-twilight-card:#241D2B;
   
-  --color-sage:        #81B29A;
-  --color-sage-light:  #94D2BD;
-  --color-blue-soft:   #8EA8C3;
-  --color-blue-pale:   #A3CEF1;
-  --color-lavender:    #C6ACD6;
-  --color-lavender-l:  #D8C4E8;
+  --color-sage:         #81B29A;
+  --color-sage-light:   #94D2BD;
+  --color-sage-soft:    #A8C5B5;
 
-  --color-sun-glow:    #FFE8C2;
-  --color-sun-warm:    #F3C882;
+  --color-rose:         #E8B4B8;
+  --color-rose-light:   #F0C0C6;
+  --color-rose-soft:    #D8A4B8;
+
+  --color-sun-glow:     #FFE8C2;
+  --color-sun-warm:     #F3C882;
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -29,20 +30,20 @@
   }
 
   body {
-    background-color: #1D1722;
-    color: #E6E2EB;
+    background-color: #1B1622;
+    color: #E8B4B8;
     font-family: 'Inter', system-ui, sans-serif;
     background-image:
-      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(198, 172, 214, 0.08) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 50% at 20% 60%, rgba(142, 168, 195, 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 70% 50% at 80% 90%, rgba(129, 178, 154, 0.06) 0%, transparent 60%);
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232, 180, 184, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 20% 60%, rgba(129, 178, 154, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 80% 90%, rgba(240, 192, 198, 0.06) 0%, transparent 60%);
     background-attachment: fixed;
   }
 
   ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: rgba(29, 23, 34, 0.5); }
-  ::-webkit-scrollbar-thumb { background: rgba(198, 172, 214, 0.25); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(198, 172, 214, 0.45); }
+  ::-webkit-scrollbar-track { background: rgba(27, 22, 34, 0.6); }
+  ::-webkit-scrollbar-thumb { background: rgba(129, 178, 154, 0.35); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(129, 178, 154, 0.55); }
 }
 
 @layer utilities {
@@ -51,22 +52,22 @@
   }
 
   .glass-card {
-    background: rgba(38, 31, 46, 0.55);
-    border: 1px solid rgba(198, 172, 214, 0.15);
+    background: rgba(36, 29, 43, 0.88);
+    border: 1px solid rgba(129, 178, 154, 0.25);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 1.5rem;
   }
 
   .glass-nav {
-    background: rgba(29, 23, 34, 0.65);
-    border-bottom: 1px solid rgba(198, 172, 214, 0.12);
+    background: rgba(27, 22, 34, 0.90);
+    border-bottom: 1px solid rgba(129, 178, 154, 0.20);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
 
   .text-gradient-solare {
-    background: linear-gradient(135deg, #FFE8C2 0%, #A3CEF1 45%, #C6ACD6 100%);
+    background: linear-gradient(135deg, #FFE8C2 0%, #94D2BD 45%, #E8B4B8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
