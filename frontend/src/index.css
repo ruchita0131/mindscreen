@@ -1,36 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* ── CASA DI SOLARE INSPIRED PALETTE ── */
-  /* Warm parchment / cream backgrounds */
-  --color-parchment:   #F0E8D8;
-  --color-cream:       #FAF6EE;
-  --color-linen:       #EDE4D0;
-  --color-sand:        #DDD3BE;
+  --color-twilight:    #1D1722;
+  --color-twilight-card:#261F2E;
+  
+  --color-sage:        #81B29A;
+  --color-sage-light:  #94D2BD;
+  --color-blue-soft:   #8EA8C3;
+  --color-blue-pale:   #A3CEF1;
+  --color-lavender:    #C6ACD6;
+  --color-lavender-l:  #D8C4E8;
 
-  /* Muted sage & dusty blue accents */
-  --color-sage:        #7A9E8E;
-  --color-sage-light:  #A8C5B5;
-  --color-blue-mist:   #8BA8C4;
-  --color-blue-pale:   #B8D0E8;
-  --color-lavender:    #B8A8CC;
+  --color-sun-glow:    #FFE8C2;
+  --color-sun-warm:    #F3C882;
 
-  /* Warm editorial text colors */
-  --color-ink:         #3D3128;
-  --color-ink-muted:   #7A6E65;
-  --color-ink-light:   #A89E95;
-
-  /* Moon / sun glow */
-  --color-moon-warm:   #F5ECD8;
-  --color-moon-glow:   #E8D8BC;
-  --color-moon-edge:   #C8B89A;
-
-  /* Keep for backwards compat */
-  --color-brand-navy:  #3D3128;
-  --color-brand-sage:  #7A9E8E;
-  --color-brand-amber: #E8D5B7;
-
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
@@ -44,20 +29,48 @@
   }
 
   body {
-    background-color: #F0E8D8;
-    color: #3D3128;
+    background-color: #1D1722;
+    color: #E6E2EB;
     font-family: 'Inter', system-ui, sans-serif;
-    /* Very subtle warm noise texture feel */
     background-image:
-      radial-gradient(ellipse at 25% 0%,   rgba(200, 184, 154, 0.35) 0%, transparent 60%),
-      radial-gradient(ellipse at 75% 100%, rgba(139, 168, 196, 0.18) 0%, transparent 60%);
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(198, 172, 214, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 20% 60%, rgba(142, 168, 195, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 80% 90%, rgba(129, 178, 154, 0.06) 0%, transparent 60%);
     background-attachment: fixed;
   }
 
-  ::-webkit-scrollbar { width: 5px; }
-  ::-webkit-scrollbar-track { background: rgba(61, 49, 40, 0.05); }
-  ::-webkit-scrollbar-thumb { background: rgba(200, 184, 154, 0.5); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(200, 184, 154, 0.8); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(29, 23, 34, 0.5); }
+  ::-webkit-scrollbar-thumb { background: rgba(198, 172, 214, 0.25); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(198, 172, 214, 0.45); }
+}
+
+@layer utilities {
+  .font-serif-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  .glass-card {
+    background: rgba(38, 31, 46, 0.55);
+    border: 1px solid rgba(198, 172, 214, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 1.5rem;
+  }
+
+  .glass-nav {
+    background: rgba(29, 23, 34, 0.65);
+    border-bottom: 1px solid rgba(198, 172, 214, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .text-gradient-solare {
+    background: linear-gradient(135deg, #FFE8C2 0%, #A3CEF1 45%, #C6ACD6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
 @layer utilities {

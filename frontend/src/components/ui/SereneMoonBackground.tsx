@@ -4,120 +4,102 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 export const SereneMoonBackground: React.FC = () => {
   const { scrollY } = useScroll();
 
-  // Moon starts as a perfect hemisphere dome at screen bottom.
-  // As user scrolls: moon sinks DOWN (positive y) and shrinks.
-  const moonY     = useTransform(scrollY, [0, 600], [0, 340]);
-  const moonScale = useTransform(scrollY, [0, 600], [1, 0.28]);
-  const glowOp    = useTransform(scrollY, [0, 400], [1, 0.25]);
+  // Casa Di Solare animation behavior:
+  // Top of page (scroll=0): Giant glowing celestial sphere rising from the bottom edge as a perfect dome.
+  // Scroll down (0 -> 500px): Sphere smoothly shrinks & recedes downward into the sanctuary reflecting basin!
+  const sphereScale = useTransform(scrollY, [0, 500], [1, 0.28]);
+  const sphereY     = useTransform(scrollY, [0, 500], [0, 220]);
+  const haloOpacity = useTransform(scrollY, [0, 450], [0.85, 0.25]);
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-
-      {/* ── AMBIENT WARM BACKGROUND GRADIENTS ── */}
-      <div
+      
+      {/* ── ATMOSPHERIC TWILIGHT SKY BACKGROUND ── */}
+      <div 
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 80% 55% at 20% 10%, rgba(200, 175, 130, 0.25) 0%, transparent 65%),
-            radial-gradient(ellipse 60% 50% at 80% 15%, rgba(139, 168, 196, 0.18) 0%, transparent 65%),
-            radial-gradient(ellipse 70% 60% at 50% 110%, rgba(240, 225, 200, 0.55) 0%, transparent 55%)
+            radial-gradient(ellipse 80% 55% at 50% 15%, rgba(198, 172, 214, 0.12) 0%, transparent 65%),
+            radial-gradient(ellipse 70% 60% at 50% 105%, rgba(255, 232, 194, 0.25) 0%, transparent 55%),
+            linear-gradient(to bottom, #1D1722 0%, #17121C 100%)
           `,
         }}
       />
 
-      {/* ── PERFECT HEMISPHERE MOON ──
-          Sphere diameter = 110vw, bottom = -55vw
-          → exactly the upper hemisphere is visible at scroll=0 */}
+      {/* ── CASA DI SOLARE RADIANT CELESTIAL SPHERE ── */}
       <motion.div
         style={{
-          y: moonY,
-          scale: moonScale,
-          position: 'absolute',
-          bottom: 'calc(-55vw)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '110vw',
-          height: '110vw',
-          minWidth: '700px',
-          minHeight: '700px',
-          transformOrigin: 'bottom center',
+          scale: sphereScale,
+          y: sphereY,
         }}
+        className="absolute -bottom-[480px] sm:-bottom-[640px] md:-bottom-[800px] left-1/2 -translate-x-1/2 w-[980px] h-[980px] sm:w-[1300px] sm:h-[1300px] md:w-[1620px] md:h-[1620px] rounded-full origin-bottom"
       >
-        {/* Outer atmospheric glow halo */}
+        {/* Concentric Moonlight Aura Halos */}
         <motion.div
-          className="absolute inset-0 rounded-full"
+          className="absolute -inset-16 rounded-full"
           style={{
-            opacity: glowOp,
-            background: 'radial-gradient(circle at 50% 50%, rgba(245, 236, 216, 0) 58%, rgba(230, 210, 175, 0.40) 80%, rgba(210, 185, 145, 0.18) 100%)',
+            opacity: haloOpacity,
+            background: 'radial-gradient(circle at 50% 50%, rgba(255, 232, 194, 0.40) 0%, rgba(243, 200, 130, 0.20) 50%, rgba(29, 23, 34, 0) 80%)',
+            filter: 'blur(30px)',
           }}
         />
 
-        {/* The Moon sphere itself */}
+        {/* Luminous Core Sphere (Casa Di Solare Golden Sun/Moon) */}
         <div
-          className="absolute inset-[5%] rounded-full overflow-hidden"
+          className="w-full h-full rounded-full relative overflow-hidden"
           style={{
             background: `
-              radial-gradient(circle at 42% 28%,
-                #FFFBF2 0%,
-                #F5ECD8 18%,
-                #EAD8BC 36%,
-                #D4BF9C 55%,
-                #B8A07C 72%,
-                #8B7A5E 85%,
-                #5A4A38 95%,
-                #2A1F14 100%
+              radial-gradient(circle at 45% 30%, 
+                #FFFFFF 0%, 
+                #FFF4D4 18%, 
+                #FFE0A3 38%, 
+                #F4C47F 58%, 
+                #E29D52 78%, 
+                #8E562A 92%, 
+                #3B2218 100%
               )
             `,
             boxShadow: `
-              0 -30px 140px rgba(245, 236, 216, 0.80),
-              0 -15px 70px rgba(230, 210, 175, 0.55),
-              inset 0 0 80px rgba(255, 255, 255, 0.12)
+              0 -20px 180px rgba(255, 232, 194, 0.75),
+              0 -10px 80px rgba(244, 196, 127, 0.50),
+              inset 0 0 100px rgba(255, 255, 255, 0.60)
             `,
           }}
         >
-          {/* Lunar maria — dark volcanic plains */}
-          <div className="absolute top-[14%] left-[22%] w-[28%] h-[20%] rounded-full bg-[#2A2018]/30 blur-2xl" style={{ transform: 'rotate(-15deg)' }} />
-          <div className="absolute top-[28%] left-[42%] w-[32%] h-[22%] rounded-full bg-[#2A2018]/35 blur-3xl" style={{ transform: 'rotate(8deg)' }} />
-          <div className="absolute top-[18%] left-[60%] w-[22%] h-[16%] rounded-full bg-[#1E1810]/25 blur-xl" />
-          <div className="absolute top-[38%] left-[15%] w-[20%] h-[14%] rounded-full bg-[#2A2018]/20 blur-xl" style={{ transform: 'rotate(20deg)' }} />
+          {/* Subtle Surface Haze & Craters */}
+          <div className="absolute top-[20%] left-[30%] w-[35%] h-[25%] rounded-full bg-[#E29D52]/20 blur-2xl transform -rotate-12" />
+          <div className="absolute top-[35%] left-[48%] w-[38%] h-[28%] rounded-full bg-[#8E562A]/25 blur-3xl transform rotate-6" />
+          <div className="absolute top-[25%] left-[62%] w-[25%] h-[20%] rounded-full bg-[#FFE0A3]/15 blur-xl" />
 
-          {/* Impact craters */}
-          <div className="absolute top-[32%] left-[28%] w-[5%] h-[5%] rounded-full bg-[#1E1810]/30" style={{ border: '1px solid rgba(255,255,255,0.20)', filter: 'blur(2px)' }} />
-          <div className="absolute top-[22%] left-[48%] w-[3.5%] h-[3.5%] rounded-full bg-[#1E1810]/25" style={{ border: '1px solid rgba(255,255,255,0.25)', filter: 'blur(1.5px)' }} />
-          <div className="absolute top-[45%] left-[58%] w-[7%] h-[7%] rounded-full bg-[#1E1810]/30" style={{ border: '1px solid rgba(255,255,255,0.15)', filter: 'blur(2px)' }} />
-          <div className="absolute top-[20%] left-[35%] w-[2.5%] h-[2.5%] rounded-full bg-[#16120A]/20" style={{ border: '1px solid rgba(255,255,255,0.30)', filter: 'blur(1px)' }} />
-
-          {/* Day/night terminator shadow */}
+          {/* Spherical Limb Darkening / Soft Atmosphere */}
           <div
             className="absolute inset-0 rounded-full"
             style={{
-              background: 'radial-gradient(ellipse at 35% 30%, transparent 38%, rgba(20, 14, 8, 0.65) 80%, rgba(10, 7, 4, 0.92) 100%)',
-            }}
-          />
-
-          {/* Specular highlight on lit side */}
-          <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'radial-gradient(circle at 38% 25%, rgba(255, 255, 255, 0.14) 0%, transparent 44%)',
+              background: 'radial-gradient(circle at 42% 28%, transparent 45%, rgba(29, 23, 34, 0.60) 82%, rgba(20, 15, 24, 0.95) 100%)',
             }}
           />
         </div>
       </motion.div>
 
-      {/* ── FLOATING WARM DUST PARTICLES ── */}
-      {[...Array(12)].map((_, i) => (
+      {/* ── FLOATING MOONLIGHT STARDUST ── */}
+      {[...Array(16)].map((_, i) => (
         <motion.div
           key={i}
-          animate={{ opacity: [0.12, 0.50, 0.12], y: [0, -22, 0] }}
-          transition={{ duration: 5 + (i % 4), repeat: Infinity, delay: i * 0.55, ease: 'easeInOut' }}
-          className="absolute rounded-full"
+          animate={{
+            opacity: [0.2, 0.7, 0.2],
+            y: [0, -30, 0],
+            scale: [0.8, 1.2, 0.8],
+          }}
+          transition={{
+            duration: 4 + (i % 5),
+            repeat: Infinity,
+            delay: i * 0.3,
+            ease: 'easeInOut',
+          }}
+          className="absolute w-1.5 h-1.5 rounded-full bg-amber-100/60 blur-[0.5px]"
           style={{
-            width:  `${2 + (i % 2)}px`,
-            height: `${2 + (i % 2)}px`,
-            background: 'rgba(175, 148, 108, 0.65)',
-            top:  `${(i * 13) % 70 + 5}%`,
-            left: `${(i * 19) % 85 + 5}%`,
+            top: `${(i * 11) % 75 + 5}%`,
+            left: `${(i * 17) % 90 + 5}%`,
           }}
         />
       ))}
