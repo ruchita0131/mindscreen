@@ -2,19 +2,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-twilight:     #1B1622;
-  --color-twilight-card:#241D2B;
+  --color-twilight:      #1B1622;
+  --color-twilight-card: #241D2B;
   
-  --color-sage:         #81B29A;
-  --color-sage-light:   #94D2BD;
-  --color-sage-soft:    #A8C5B5;
+  --color-sage:          #81B29A;
+  --color-sage-light:    #94D2BD;
+  --color-sage-soft:     #A8C5B5;
 
-  --color-rose:         #E8B4B8;
-  --color-rose-light:   #F0C0C6;
-  --color-rose-soft:    #D8A4B8;
+  --color-rose:          #E8B4B8;
+  --color-rose-light:    #F0C0C6;
+  --color-rose-soft:     #F3D0D5;
 
-  --color-sun-glow:     #FFE8C2;
-  --color-sun-warm:     #F3C882;
+  --color-sun-glow:      #FFE8C2;
+  --color-sun-warm:      #F3C882;
 
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Inter', system-ui, sans-serif;
@@ -31,12 +31,12 @@
 
   body {
     background-color: #1B1622;
-    color: #E8B4B8;
+    color: #F0C0C6;
     font-family: 'Inter', system-ui, sans-serif;
     background-image:
-      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232, 180, 184, 0.08) 0%, transparent 70%),
-      radial-gradient(ellipse 60% 50% at 20% 60%, rgba(129, 178, 154, 0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 70% 50% at 80% 90%, rgba(240, 192, 198, 0.06) 0%, transparent 60%);
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(240, 192, 198, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 20% 60%, rgba(148, 210, 189, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 80% 90%, rgba(255, 232, 194, 0.06) 0%, transparent 60%);
     background-attachment: fixed;
   }
 
@@ -51,73 +51,33 @@
     font-family: 'Cormorant Garamond', Georgia, serif;
   }
 
+  /* Opaque high-contrast card surfaces */
   .glass-card {
-    background: rgba(36, 29, 43, 0.88);
-    border: 1px solid rgba(129, 178, 154, 0.25);
+    background: rgba(36, 29, 43, 0.92);
+    border: 1px solid rgba(148, 210, 189, 0.30);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-radius: 1.5rem;
   }
 
   .glass-nav {
-    background: rgba(27, 22, 34, 0.90);
-    border-bottom: 1px solid rgba(129, 178, 154, 0.20);
+    background: rgba(27, 22, 34, 0.92);
+    border-bottom: 1px solid rgba(148, 210, 189, 0.25);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
 
   .text-gradient-solare {
-    background: linear-gradient(135deg, #FFE8C2 0%, #94D2BD 45%, #E8B4B8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-}
-
-@layer utilities {
-  /* ── GLASS / CARD SURFACES — warm parchment glass ── */
-  .glass {
-    background: rgba(250, 246, 238, 0.55);
-    border: 1px solid rgba(200, 184, 154, 0.35);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .glass-card {
-    background: rgba(250, 246, 238, 0.60);
-    border: 1px solid rgba(200, 184, 154, 0.30);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 1.5rem;
-  }
-
-  .glass-dark {
-    background: rgba(61, 49, 40, 0.08);
-    border: 1px solid rgba(61, 49, 40, 0.12);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  /* ── EDITORIAL TEXT GRADIENT (warm golden → cool blue → lavender) ── */
-  .text-gradient {
-    background: linear-gradient(135deg, #8B6E50 0%, #5A7A9A 50%, #8870A8 100%);
+    background: linear-gradient(135deg, #FFE8C2 0%, #94D2BD 45%, #F0C0C6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* ── GLOWS ── */
   .glow-sage {
-    box-shadow: 0 0 30px rgba(122, 158, 142, 0.25);
-  }
-  .glow-blue {
-    box-shadow: 0 0 30px rgba(139, 168, 196, 0.25);
-  }
-  .glow-moon {
-    box-shadow: 0 0 80px rgba(240, 225, 200, 0.6), 0 0 40px rgba(220, 200, 160, 0.4);
+    box-shadow: 0 0 30px rgba(129, 178, 154, 0.30);
   }
 
-  /* ── ANIMATE IN ── */
   .animate-in {
     animation: fadeSlideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
   }
