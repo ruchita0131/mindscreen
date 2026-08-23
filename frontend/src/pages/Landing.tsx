@@ -1,20 +1,28 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { SereneMoonBackground } from '../components/ui/SereneMoonBackground';
-import { Brain, Mic, ClipboardList, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Brain, Mic, ClipboardList, ArrowRight, ShieldCheck, Sparkles, Moon } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { scrollY } = useScroll();
+
+  // Scroll transforms for editorial hero text:
+  // At scroll Y = 0: Intro text is compact, moon is giant
+  // As user scrolls Y (0 -> 400px): Headline text smoothly expands & scales up into prominent bold focus!
+  const titleScale = useTransform(scrollY, [0, 400], [0.92, 1.08]);
+  const titleY = useTransform(scrollY, [0, 400], [0, -20]);
+  const introBadgeOpacity = useTransform(scrollY, [0, 250], [1, 0.4]);
 
   return (
     <div className="min-h-screen bg-[#161722] text-slate-100 overflow-x-hidden relative font-sans">
-      {/* Casa Di Solare Style Serene Moon Background */}
+      {/* Casa Di Solare Style Realistic Moon Background with Scroll Scale */}
       <SereneMoonBackground />
 
       {/* Navigation Bar */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
+      <nav className="relative z-30 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center backdrop-blur-xl">
             <Brain className="text-[#A3CEF1] w-6 h-6" />
@@ -32,21 +40,22 @@ export default function Landing() {
       </nav>
 
       <main className="relative z-10 max-w-7xl mx-auto px-6">
-        {/* HERO SECTION — CASA DI SOLARE STYLE EDITORIAL WITH GIANT RISING MOON */}
-        <section className="min-h-[85vh] flex flex-col justify-between pt-12 pb-24 relative">
+        {/* HERO SECTION — CASA DI SOLARE SCROLL ANIMATED HERO */}
+        <section className="min-h-[88vh] flex flex-col justify-between pt-10 pb-20 relative">
           
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto z-20 relative"
+            style={{ scale: titleScale, y: titleY }}
+            className="text-center max-w-4xl mx-auto z-20 relative origin-top transition-transform duration-100"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-white/10 mb-6 backdrop-blur-xl shadow-lg">
+            <motion.div
+              style={{ opacity: introBadgeOpacity }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-white/10 mb-6 backdrop-blur-xl shadow-lg"
+            >
               <Sparkles className="w-4 h-4 text-[#E8D5B7] animate-pulse" />
               <span className="text-xs font-semibold tracking-widest text-[#E8D5B7] uppercase">
                 Multimodal Mental Wellness Screening
               </span>
-            </div>
+            </motion.div>
             
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[1.05] mb-6">
               AI-Powered <br/>
@@ -66,7 +75,7 @@ export default function Landing() {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => window.scrollTo({ top: 950, behavior: 'smooth' })}
+                onClick={() => window.scrollTo({ top: 900, behavior: 'smooth' })}
                 className="border-white/15 text-slate-200 hover:bg-white/10 text-base px-8 py-5 rounded-full w-full sm:w-auto transition-all backdrop-blur-xl"
               >
                 Discover Features
@@ -74,10 +83,12 @@ export default function Landing() {
             </div>
           </motion.div>
 
-          {/* Scroll Prompt above Moon Horizon */}
-          <div className="text-center z-20 relative pt-16">
-            <p className="text-xs uppercase tracking-widest text-[#E8D5B7]/80 font-medium">Scroll to Discover</p>
-            <div className="w-5 h-8 border-2 border-[#E8D5B7]/40 rounded-full mx-auto mt-3 flex justify-center p-1">
+          {/* Scroll Prompt above Giant Moon Horizon */}
+          <div className="text-center z-20 relative pt-12">
+            <p className="text-xs uppercase tracking-widest text-[#E8D5B7]/90 font-semibold drop-shadow-sm">
+              Scroll to zoom & discover
+            </p>
+            <div className="w-5 h-8 border-2 border-[#E8D5B7]/50 rounded-full mx-auto mt-3 flex justify-center p-1 shadow-md">
               <motion.div
                 animate={{ y: [0, 10, 0] }}
                 transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
@@ -91,10 +102,10 @@ export default function Landing() {
         {/* FEATURES SECTION */}
         <section className="py-28 relative z-20">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4 text-slate-100">
+            <h2 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-slate-100">
               A Holistic Tri-Modal Approach
             </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-base">
+            <p className="text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
               Desaturated, clinical-grade analysis combining subjective responses, text semantics, and vocal biomarkers.
             </p>
           </div>
@@ -148,10 +159,10 @@ export default function Landing() {
         <section className="py-20 mb-20 relative z-20">
           <div className="glass p-10 sm:p-14 rounded-3xl border-white/10 relative overflow-hidden">
             <div className="text-center mb-16 relative z-10">
-              <h2 className="text-3xl sm:text-5xl font-black tracking-tight mb-4 text-slate-100">
+              <h2 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-slate-100">
                 How MindScreen Works
               </h2>
-              <p className="text-slate-400 max-w-2xl mx-auto text-base">
+              <p className="text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
                 3 effortless steps to complete your wellness screening session.
               </p>
             </div>

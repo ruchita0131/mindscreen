@@ -1,81 +1,103 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 export const SereneMoonBackground: React.FC = () => {
+  const { scrollY } = useScroll();
+
+  // Scroll transforms:
+  // At scroll Y = 0 (top of page): Moon is giant & zoomed-in (scale 1, bottom offset -450px)
+  // As user scrolls down (0 -> 600px): Moon shrinks smoothly (scale 0.38, moves up/small)
+  const moonScale = useTransform(scrollY, [0, 500], [1, 0.38]);
+  const moonY = useTransform(scrollY, [0, 500], [0, -180]);
+  const moonOpacity = useTransform(scrollY, [0, 500], [0.95, 0.75]);
+  const haloOpacity = useTransform(scrollY, [0, 500], [0.4, 0.15]);
+
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      
-      {/* ── GIANT CASA DI SOLARE STYLE FULL-SIZE LUNAR SPHERE ── */}
+      {/* SVG Lunar Texture Filters */}
+      <svg className="hidden">
+        <defs>
+          {/* Realistic Lunar Surface Noise */}
+          <filter id="moonTexture" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="5" result="noise" />
+            <feColorMatrix
+              type="matrix"
+              values="
+                0.85 0 0 0 0.1
+                0 0.85 0 0 0.1
+                0 0 0.90 0 0.12
+                0 0 0 0.45 0
+              "
+            />
+          </filter>
+
+          {/* Lunar Maria Plains Gradient */}
+          <radialGradient id="lunarMaria" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#FFF8E7" stopOpacity="0.95" />
+            <stop offset="35%" stopColor="#E8D5B7" stopOpacity="0.90" />
+            <stop offset="65%" stopColor="#A3CEF1" stopOpacity="0.75" />
+            <stop offset="88%" stopColor="#8EA8C3" stopOpacity="0.50" />
+            <stop offset="100%" stopColor="#161722" stopOpacity="0.10" />
+          </radialGradient>
+        </defs>
+      </svg>
+
+      {/* ── REALISTIC GIANT RISING MOON SPHERE ── */}
       <motion.div
-        animate={{
-          scale: [1, 1.03, 1],
-          opacity: [0.85, 0.95, 0.85],
-        }}
-        transition={{
-          duration: 14,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="absolute -bottom-[450px] sm:-bottom-[600px] md:-bottom-[700px] left-1/2 -translate-x-1/2 w-[850px] h-[850px] sm:w-[1100px] sm:h-[1100px] md:w-[1350px] md:h-[1350px] rounded-full"
         style={{
-          background: `
-            radial-gradient(circle at 50% 25%, 
-              rgba(255, 248, 231, 0.95) 0%, 
-              rgba(232, 213, 183, 0.85) 25%, 
-              rgba(163, 206, 241, 0.55) 55%, 
-              rgba(198, 172, 214, 0.30) 75%, 
-              rgba(22, 23, 34, 0) 100%
-            )
-          `,
-          boxShadow: '0 0 160px rgba(232, 213, 183, 0.4), inset 0 0 100px rgba(255, 255, 255, 0.6)',
-          filter: 'blur(2px)',
+          scale: moonScale,
+          y: moonY,
+          opacity: moonOpacity,
         }}
-      />
+        className="absolute -bottom-[420px] sm:-bottom-[580px] md:-bottom-[680px] left-1/2 -translate-x-1/2 w-[850px] h-[850px] sm:w-[1100px] sm:h-[1100px] md:w-[1350px] md:h-[1350px] rounded-full origin-bottom"
+      >
+        {/* Core Luminous Moon Base */}
+        <div
+          className="w-full h-full rounded-full relative overflow-hidden shadow-[0_0_180px_rgba(232,213,183,0.45)]"
+          style={{
+            background: 'url(#lunarMaria), radial-gradient(circle at 45% 30%, #FFF8E7 0%, #E8D5B7 30%, #A3CEF1 60%, #161722 95%)',
+          }}
+        >
+          {/* Realistic Surface Texture Overlay */}
+          <div
+            className="absolute inset-0 rounded-full mix-blend-overlay opacity-60 pointer-events-none"
+            style={{ filter: 'url(#moonTexture)' }}
+          />
+
+          {/* Real Moon Craters & Maria Dark Plains (Sea of Tranquility) */}
+          <div className="absolute top-[18%] left-[25%] w-[220px] h-[160px] rounded-full bg-slate-800/25 blur-xl transform -rotate-12" />
+          <div className="absolute top-[32%] left-[45%] w-[310px] h-[220px] rounded-full bg-slate-800/30 blur-2xl transform rotate-6" />
+          <div className="absolute top-[22%] left-[58%] w-[180px] h-[140px] rounded-full bg-slate-900/25 blur-xl" />
+          
+          {/* Impact Craters */}
+          <div className="absolute top-[40%] left-[30%] w-[45px] h-[45px] rounded-full border-2 border-white/20 bg-slate-700/20 shadow-inner blur-[1px]" />
+          <div className="absolute top-[28%] left-[38%] w-[32px] h-[32px] rounded-full border border-white/25 bg-slate-700/20 shadow-inner blur-[0.5px]" />
+          <div className="absolute top-[52%] left-[62%] w-[60px] h-[60px] rounded-full border-2 border-white/20 bg-slate-700/20 shadow-inner blur-[1px]" />
+
+          {/* Spherical Limb Shadow / Darkening */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at 40% 30%, transparent 50%, rgba(15, 16, 25, 0.75) 85%, rgba(10, 11, 18, 0.95) 100%)',
+            }}
+          />
+        </div>
+      </motion.div>
 
       {/* ── ATMOSPHERIC MOONLIGHT HALO RINGS ── */}
       <motion.div
-        animate={{
-          scale: [1, 1.08, 1],
-          opacity: [0.2, 0.4, 0.2],
-        }}
-        transition={{
-          duration: 18,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="absolute -bottom-[480px] sm:-bottom-[640px] md:-bottom-[740px] left-1/2 -translate-x-1/2 w-[950px] h-[950px] sm:w-[1250px] sm:h-[1250px] md:w-[1500px] md:h-[1500px] rounded-full border border-amber-200/20"
+        style={{ opacity: haloOpacity, scale: moonScale }}
+        className="absolute -bottom-[460px] sm:-bottom-[620px] md:-bottom-[720px] left-1/2 -translate-x-1/2 w-[950px] h-[950px] sm:w-[1250px] sm:h-[1250px] md:w-[1500px] md:h-[1500px] rounded-full border border-amber-200/25 origin-bottom"
       />
 
       <motion.div
-        animate={{
-          scale: [1.05, 1.15, 1.05],
-          opacity: [0.15, 0.3, 0.15],
-        }}
-        transition={{
-          duration: 22,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        className="absolute -bottom-[520px] sm:-bottom-[700px] md:-bottom-[800px] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] sm:w-[1400px] sm:h-[1400px] md:w-[1700px] md:h-[1700px] rounded-full border border-purple-300/15"
+        style={{ opacity: haloOpacity, scale: moonScale }}
+        className="absolute -bottom-[500px] sm:-bottom-[680px] md:-bottom-[780px] left-1/2 -translate-x-1/2 w-[1100px] h-[1100px] sm:w-[1400px] sm:h-[1400px] md:w-[1700px] md:h-[1700px] rounded-full border border-purple-300/15 origin-bottom"
       />
 
-      {/* ── SOFT SAGE & BLUE TWILIGHT AMBIENT BACKDROP GLOWS ── */}
-      <motion.div
-        animate={{
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-1/4 left-10 w-[600px] h-[600px] rounded-full bg-[#8EA8C3]/10 blur-[130px]"
-      />
-      <motion.div
-        animate={{
-          opacity: [0.3, 0.5, 0.3],
-          scale: [1.1, 1, 1.1],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-1/3 right-10 w-[600px] h-[600px] rounded-full bg-[#C6ACD6]/10 blur-[130px]"
-      />
+      {/* ── AMBIENT TWILIGHT BACKDROP GLOWS ── */}
+      <div className="absolute top-1/4 left-10 w-[550px] h-[550px] rounded-full bg-[#8EA8C3]/10 blur-[130px]" />
+      <div className="absolute top-1/3 right-10 w-[550px] h-[550px] rounded-full bg-[#C6ACD6]/10 blur-[130px]" />
 
       {/* ── FLOATING MOONLIGHT STARDUST ── */}
       {[...Array(16)].map((_, i) => (
