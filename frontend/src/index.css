@@ -2,16 +2,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-blue: #7EB2DD;
+  --color-brand-blue: #8EA8C3;
   --color-brand-blueL: #A3CEF1;
   --color-brand-sage: #81B29A;
   --color-brand-sageL: #94D2BD;
   --color-brand-lavender: #C6ACD6;
-  --color-brand-lavenderL: #B8C0E0;
-  --color-brand-navy: #0F141C;
+  --color-brand-lavenderL: #D8C4E8;
+  --color-brand-navy: #161722;
   --color-brand-teal: #81B29A;
   --color-brand-tealL: #94D2BD;
-  --color-brand-amber: #A3CEF1;
+  --color-brand-amber: #E8D5B7;
   --color-brand-purple: #C6ACD6;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
@@ -21,46 +21,46 @@
     box-sizing: border-box;
   }
   body {
-    @apply bg-[#0F141C] text-slate-100 font-sans;
+    @apply bg-[#161722] text-slate-100 font-sans;
     background-image: 
-      radial-gradient(ellipse at 25% 40%, rgba(126, 178, 221, 0.08) 0%, transparent 65%),
-      radial-gradient(ellipse at 75% 70%, rgba(198, 172, 214, 0.07) 0%, transparent 65%),
-      radial-gradient(ellipse at 50% 90%, rgba(129, 178, 154, 0.06) 0%, transparent 65%);
+      radial-gradient(ellipse at 30% 30%, rgba(142, 168, 195, 0.07) 0%, transparent 70%),
+      radial-gradient(ellipse at 70% 60%, rgba(198, 172, 214, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse at 50% 90%, rgba(129, 178, 154, 0.06) 0%, transparent 70%);
     background-attachment: fixed;
   }
   ::-webkit-scrollbar {
     width: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.03);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(126, 178, 221, 0.35);
+    background: rgba(198, 172, 214, 0.3);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(126, 178, 221, 0.55);
+    background: rgba(198, 172, 214, 0.5);
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/[0.04] border border-white/10 backdrop-blur-xl;
+    @apply bg-white/[0.03] border border-white/[0.08] backdrop-blur-xl;
   }
   .glass-card {
-    @apply bg-slate-900/60 border border-white/10 backdrop-blur-xl rounded-2xl;
+    @apply bg-slate-900/50 border border-white/[0.08] backdrop-blur-xl rounded-2xl;
   }
   .glow-blue {
-    box-shadow: 0 0 25px rgba(126, 178, 221, 0.25);
+    box-shadow: 0 0 30px rgba(163, 206, 241, 0.2);
   }
   .glow-sage {
-    box-shadow: 0 0 25px rgba(129, 178, 154, 0.25);
+    box-shadow: 0 0 30px rgba(129, 178, 154, 0.2);
   }
   .glow-lavender {
-    box-shadow: 0 0 25px rgba(198, 172, 214, 0.25);
+    box-shadow: 0 0 30px rgba(198, 172, 214, 0.2);
   }
   .text-gradient {
-    background: linear-gradient(135deg, #A3CEF1 0%, #81B29A 50%, #C6ACD6 100%);
+    background: linear-gradient(135deg, #F3E8D3 0%, #A3CEF1 45%, #C6ACD6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -73,4 +73,5 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 }
+
 

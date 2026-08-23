@@ -22,7 +22,7 @@ export function DashboardLayout() {
   ];
 
   return (
-    <div className="flex h-screen bg-[#0D1B2A] text-white overflow-hidden relative">
+    <div className="flex h-screen bg-[#161722] text-white overflow-hidden relative">
       {/* Soothing Ambient Sun Background */}
       <AmbientSunBackground />
 
