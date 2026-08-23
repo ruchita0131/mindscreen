@@ -3,104 +3,109 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { SereneMoonBackground } from '../components/ui/SereneMoonBackground';
-import { Brain, Mic, ClipboardList, ArrowRight, ShieldCheck, Sparkles, Moon } from 'lucide-react';
+import { Brain, Mic, ClipboardList, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
 
-  // Scroll transforms for editorial hero text:
-  // At scroll Y = 0: Intro text is compact, moon is giant
-  // As user scrolls Y (0 -> 400px): Headline text smoothly expands & scales up into prominent bold focus!
-  const titleScale = useTransform(scrollY, [0, 400], [0.92, 1.08]);
-  const titleY = useTransform(scrollY, [0, 400], [0, -20]);
-  const introBadgeOpacity = useTransform(scrollY, [0, 250], [1, 0.4]);
+  // At scroll Y=0: moon is a perfect hemisphere filling the bottom half of screen
+  // Text is hidden (opacity 0, slightly pushed down)
+  // As user scrolls 0 -> 500px: moon recedes downward, text fades & slides UP into view
+  const textOpacity = useTransform(scrollY, [80, 380], [0, 1]);
+  const textY = useTransform(scrollY, [80, 380], [40, 0]);
+
+  // Scroll label fades OUT as user starts scrolling
+  const scrollLabelOpacity = useTransform(scrollY, [0, 120], [1, 0]);
 
   return (
-    <div className="min-h-screen bg-[#161722] text-slate-100 overflow-x-hidden relative font-sans">
+    <div className="min-h-[300vh] bg-[#161722] text-slate-100 overflow-x-hidden relative font-sans">
       {/* Casa Di Solare Style Realistic Moon Background with Scroll Scale */}
       <SereneMoonBackground />
 
-      {/* Navigation Bar */}
-      <nav className="relative z-30 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center backdrop-blur-xl">
-            <Brain className="text-[#A3CEF1] w-6 h-6" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-gradient">MindScreen</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button 
-            onClick={() => navigate('/dashboard')}
-            className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold shadow-[0_0_25px_rgba(129,178,154,0.35)] transition-all rounded-full px-6 py-2.5 text-sm"
-          >
-            Enter Sanctuary
-          </Button>
-        </div>
-      </nav>
+      {/* ── STICKY HERO VIEWPORT ── (100vh sticky so content scrolls behind moon) */}
+      <div className="sticky top-0 h-screen overflow-hidden z-10">
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6">
-        {/* HERO SECTION — CASA DI SOLARE SCROLL ANIMATED HERO */}
-        <section className="min-h-[88vh] flex flex-col justify-between pt-10 pb-20 relative">
-          
-          <motion.div
-            style={{ scale: titleScale, y: titleY }}
-            className="text-center max-w-4xl mx-auto z-20 relative origin-top transition-transform duration-100"
-          >
-            <motion.div
-              style={{ opacity: introBadgeOpacity }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-white/10 mb-6 backdrop-blur-xl shadow-lg"
+        {/* Navigation Bar — always visible */}
+        <nav className="relative z-30 flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center backdrop-blur-xl">
+              <Brain className="text-[#A3CEF1] w-6 h-6" />
+            </div>
+            <span className="text-2xl font-bold tracking-tight text-gradient">MindScreen</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => navigate('/dashboard')}
+              className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold shadow-[0_0_25px_rgba(129,178,154,0.35)] transition-all rounded-full px-6 py-2.5 text-sm"
             >
-              <Sparkles className="w-4 h-4 text-[#E8D5B7] animate-pulse" />
-              <span className="text-xs font-semibold tracking-widest text-[#E8D5B7] uppercase">
-                Multimodal Mental Wellness Screening
-              </span>
-            </motion.div>
-            
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[1.05] mb-6">
-              AI-Powered <br/>
-              <span className="text-gradient">MindScreen</span>
-            </h1>
-            
-            <p className="text-base sm:text-xl text-slate-300/90 mb-10 leading-relaxed max-w-2xl mx-auto font-normal">
-              A serene, desaturated mental health platform integrating PHQ-9 clinical metrics, MentalBERT natural language processing, and voice acoustics.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button 
-                onClick={() => navigate('/dashboard')}
-                className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-base px-8 py-5 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.4)] transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
-              >
-                Start Assessment <ArrowRight className="w-5 h-5" />
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => window.scrollTo({ top: 900, behavior: 'smooth' })}
-                className="border-white/15 text-slate-200 hover:bg-white/10 text-base px-8 py-5 rounded-full w-full sm:w-auto transition-all backdrop-blur-xl"
-              >
-                Discover Features
-              </Button>
-            </div>
-          </motion.div>
+              Enter Sanctuary
+            </Button>
+          </div>
+        </nav>
 
-          {/* Scroll Prompt above Giant Moon Horizon */}
-          <div className="text-center z-20 relative pt-12">
-            <p className="text-xs uppercase tracking-widest text-[#E8D5B7]/90 font-semibold drop-shadow-sm">
-              Scroll to zoom & discover
-            </p>
-            <div className="w-5 h-8 border-2 border-[#E8D5B7]/50 rounded-full mx-auto mt-3 flex justify-center p-1 shadow-md">
-              <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-1.5 h-1.5 bg-[#E8D5B7] rounded-full"
-              />
-            </div>
+        {/* ── HERO CONTENT — fades in as moon recedes ── */}
+        <motion.div
+          style={{ opacity: textOpacity, y: textY }}
+          className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 z-20 pb-24"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-white/10 mb-6 backdrop-blur-xl shadow-lg">
+            <Sparkles className="w-4 h-4 text-[#E8D5B7] animate-pulse" />
+            <span className="text-xs font-semibold tracking-widest text-[#E8D5B7] uppercase">
+              Multimodal Mental Wellness Screening
+            </span>
           </div>
 
-        </section>
+          <h1 className="text-5xl sm:text-7xl md:text-9xl font-black tracking-tight leading-[1.0] mb-6 max-w-5xl">
+            AI-Powered
+            <br />
+            <span className="text-gradient">MindScreen</span>
+          </h1>
+
+          <p className="text-base sm:text-xl text-slate-300/90 mb-10 leading-relaxed max-w-2xl font-normal">
+            A serene mental health platform integrating PHQ-9 clinical metrics, MentalBERT NLP, and voice acoustics.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button
+              onClick={() => navigate('/dashboard')}
+              className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-base px-8 py-5 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.4)] transition-all flex items-center gap-2 w-full sm:w-auto"
+            >
+              Start Assessment <ArrowRight className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => window.scrollTo({ top: 1400, behavior: 'smooth' })}
+              className="border-white/15 text-slate-200 hover:bg-white/10 text-base px-8 py-5 rounded-full w-full sm:w-auto transition-all backdrop-blur-xl"
+            >
+              Discover Features
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* ── SCROLL PROMPT — visible only at very top, fades when scrolling ── */}
+        <motion.div
+          style={{ opacity: scrollLabelOpacity }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 text-center"
+        >
+          <p className="text-xs uppercase tracking-widest text-[#E8D5B7]/90 font-semibold drop-shadow-sm mb-3">
+            Scroll to reveal
+          </p>
+          <div className="w-5 h-8 border-2 border-[#E8D5B7]/50 rounded-full mx-auto flex justify-center p-1">
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-1.5 h-1.5 bg-[#E8D5B7] rounded-full"
+            />
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ── SCROLLABLE CONTENT BELOW STICKY HERO ── */}
+      <main className="relative z-20 max-w-7xl mx-auto px-6 pb-24">
 
         {/* FEATURES SECTION */}
-        <section className="py-28 relative z-20">
+        <section className="py-28">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-slate-100">
               A Holistic Tri-Modal Approach
@@ -109,7 +114,7 @@ export default function Landing() {
               Desaturated, clinical-grade analysis combining subjective responses, text semantics, and vocal biomarkers.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
@@ -137,7 +142,7 @@ export default function Landing() {
                 border: 'border-purple-500/20'
               }
             ].map((feature, i) => (
-              <motion.div 
+              <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 25 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -156,7 +161,7 @@ export default function Landing() {
         </section>
 
         {/* HOW IT WORKS SECTION */}
-        <section className="py-20 mb-20 relative z-20">
+        <section className="py-20 mb-20">
           <div className="glass p-10 sm:p-14 rounded-3xl border-white/10 relative overflow-hidden">
             <div className="text-center mb-16 relative z-10">
               <h2 className="text-4xl sm:text-6xl font-black tracking-tight mb-4 text-slate-100">
@@ -166,7 +171,7 @@ export default function Landing() {
                 3 effortless steps to complete your wellness screening session.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
               {[
                 { step: '01', title: 'Complete PHQ-9', desc: 'Select ratings for 9 clinical questions regarding your recent mood and energy levels.' },
@@ -198,7 +203,7 @@ export default function Landing() {
               <span>Privacy Preserving • Confidential Analysis</span>
             </div>
           </div>
-          
+
           <div className="text-center md:text-left text-xs text-slate-500 border-t border-white/5 pt-8 leading-relaxed">
             <p className="mb-2">
               <strong className="text-slate-400">Clinical Disclaimer:</strong> MindScreen is an AI-assisted screening research platform intended solely for preliminary wellness assessment. It is not a diagnostic tool and does not constitute medical advice.
