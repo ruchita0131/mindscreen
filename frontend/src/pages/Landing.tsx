@@ -191,6 +191,105 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* SUKHOON AI COMPANION SHOWCASE — MATCHING IMAGE 2 */}
+        <section className="py-20 relative z-20">
+          <div className="glass-card p-8 sm:p-14 border-[#81B29A]/30 relative overflow-hidden bg-gradient-to-br from-[#241D2B] via-[#1B1622] to-[#2E2032]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+              
+              {/* Left Column: Interactive Chat Cards Preview */}
+              <div className="lg:col-span-7 space-y-4 relative">
+                
+                {/* User Message Bubble */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                  viewport={{ once: true }}
+                  className="p-4 sm:p-5 rounded-2xl bg-white text-slate-900 shadow-xl max-w-md space-y-1 border border-white/20"
+                >
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                    <span>You</span>
+                  </div>
+                  <p className="text-sm font-medium leading-relaxed">
+                    I get so stressed talking to my parents. It always ends with us arguing.
+                  </p>
+                </motion.div>
+
+                {/* Sukhoon Companion Message Bubble */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  viewport={{ once: true }}
+                  className="p-4 sm:p-5 rounded-2xl bg-white text-slate-900 shadow-xl max-w-md space-y-1 border border-white/20 ml-4 sm:ml-8"
+                >
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                    <span>Sukhoon (سکون / सुकून)</span>
+                  </div>
+                  <p className="text-sm font-medium leading-relaxed">
+                    It's so tough when family doesn't see where you're coming from. Take a breath with me. Let's try this grounding exercise.
+                  </p>
+                </motion.div>
+
+                {/* Embedded Recommendation Card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  viewport={{ once: true }}
+                  className="p-4 rounded-2xl bg-[#1B1622] border-2 border-[#81B29A] shadow-2xl max-w-md ml-4 sm:ml-8 flex items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-[#81B29A]/20 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-[#94D2BD]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[#FFE8C2]">Communicating with Care</h4>
+                      <p className="text-xs text-[#94D2BD]">Pranayama Guided Breathwork (5 min)</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => navigate('/sukhoon')}
+                    className="w-10 h-10 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+                  >
+                    ▶
+                  </button>
+                </motion.div>
+
+                {/* Floating Avatar Sphere */}
+                <div className="absolute -bottom-6 -left-4 w-16 h-16 rounded-full bg-gradient-to-tr from-[#FFB703] via-[#F4A261] to-[#81B29A] flex items-center justify-center shadow-2xl border-2 border-white/40">
+                  <span className="text-xl">😌</span>
+                </div>
+              </div>
+
+              {/* Right Column: Title & Action */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 text-[#94D2BD] text-xs font-bold uppercase tracking-widest">
+                  <span>Indian Wellness Touch</span>
+                </div>
+                <h3 className="font-serif-title text-4xl sm:text-5xl italic font-normal tracking-tight text-[#94D2BD] leading-tight">
+                  Always-there empathetic support
+                </h3>
+                <p className="text-[#E8B4B8] text-base font-medium leading-relaxed">
+                  Unpack what’s on your mind with Sukhoon, our empathetic AI companion. Gain perspective on daily stressors, family expectations, and exam pressure with instant personalized grounding recommendations.
+                </p>
+                <div>
+                  <Button 
+                    onClick={() => navigate('/sukhoon')}
+                    className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm px-8 py-4 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.4)] transition-all inline-flex items-center gap-2"
+                  >
+                    Chat with Sukhoon AI <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+
         {/* HOW IT WORKS SECTION */}
         <section className="py-20 mb-24 relative z-20">
           <div className="glass-card p-10 sm:p-16 border-[#81B29A]/30 relative overflow-hidden">

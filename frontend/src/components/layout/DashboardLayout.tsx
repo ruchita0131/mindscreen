@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
-import { LayoutDashboard, ClipboardList, LogOut, History, Heart, ChevronRight, Brain, ShieldAlert } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, LogOut, History, Heart, ChevronRight, Brain, ShieldAlert, Sparkles, MessageSquareHeart } from 'lucide-react';
 
 export function DashboardLayout() {
   const { user, logoutUser } = useAuthContext();
@@ -13,11 +13,12 @@ export function DashboardLayout() {
   };
 
   const navItems = [
-    { name: 'Dashboard',       path: '/dashboard',  icon: LayoutDashboard, description: 'Overview & trends' },
-    { name: 'New Assessment',  path: '/assessment', icon: ClipboardList,   description: 'Start screening' },
-    { name: 'History',         path: '/history',    icon: History,         description: 'Past results' },
-    { name: 'Mood Tracker',    path: '/mood',       icon: Heart,           description: 'Daily check-in' },
-    { name: 'Counselor Portal',path: '/counselor',  icon: ShieldAlert,     description: 'Privacy oversight', isSpecial: true },
+    { name: 'Dashboard',       path: '/dashboard',  icon: LayoutDashboard,    description: 'Overview & trends' },
+    { name: 'Sukhoon AI Companion', path: '/sukhoon', icon: MessageSquareHeart, description: 'Emotional unpacking chat' },
+    { name: 'New Assessment',  path: '/assessment', icon: ClipboardList,      description: 'Start screening' },
+    { name: 'History',         path: '/history',    icon: History,            description: 'Past results' },
+    { name: 'Mood Tracker',    path: '/mood',       icon: Heart,              description: 'Daily check-in' },
+    { name: 'Counselor Portal',path: '/counselor',  icon: ShieldAlert,        description: 'Privacy oversight', isSpecial: true },
   ];
 
   return (

@@ -57,6 +57,7 @@ app.include_router(auth.router)
 app.include_router(predict.router)
 app.include_router(phq.router)
 app.include_router(mood.router)
+app.include_router(chat.router)
 
 if __name__ == "__main__":
     import uvicorn
