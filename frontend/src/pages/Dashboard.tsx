@@ -1,186 +1,304 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../components/ui/Button';
-import { useAuthContext } from '../context/AuthContext';
-import { Activity, Plus, TrendingUp, Brain, Mic, ClipboardList, TrendingDown, Minus, Sun, Flame, Award, Heart, Sparkles, AlertCircle } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { 
+  BookOpen, 
+  Mic, 
+  Flame, 
+  ChevronRight, 
+  Calendar, 
+  Wind, 
+  Sparkles, 
+  Heart, 
+  ArrowUpRight 
+} from 'lucide-react';
 import { GuidedBreathingModal } from '../components/tools/GuidedBreathingModal';
-
-const mockHistory = [
-  { id: 1, date: 'Aug 1', score: 12, risk_level: 'Moderate', confidence: 0.78 },
-  { id: 2, date: 'Aug 4', score: 9, risk_level: 'Mild', confidence: 0.82 },
-  { id: 3, date: 'Aug 7', score: 6, risk_level: 'Mild', confidence: 0.75 },
-  { id: 4, date: 'Aug 10', score: 4, risk_level: 'Minimal', confidence: 0.91 },
-];
-
-const RISK_STYLES: Record<string, { text: string; bg: string; border: string }> = {
-  minimal:  { text: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/30' },
-  mild:     { text: 'text-amber-400',   bg: 'bg-amber-400/10',   border: 'border-amber-400/30' },
-  moderate: { text: 'text-orange-400',  bg: 'bg-orange-400/10',  border: 'border-orange-400/30' },
-  severe:   { text: 'text-red-400',     bg: 'bg-red-400/10',     border: 'border-red-500/30' },
-};
+import { useAuthContext } from '../context/AuthContext';
 
 export default function Dashboard() {
-  const { user } = useAuthContext();
   const navigate = useNavigate();
-  const [history] = useState(mockHistory);
-  const [isBreathingOpen, setIsBreathingOpen] = useState(false);
+  const { user } = useAuthContext();
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [showBreathingModal, setShowBreathingModal] = useState(false);
 
-  const latest = history[history.length - 1];
+  const userName = user?.email ? user.email.split('@')[0] : 'Ruchita';
 
-  const badges = [
-    { name: 'Mindful Writer', desc: 'Completed 3 text journals', icon: Brain, unlocked: true, color: 'text-brand-tealL' },
-    { name: 'Voice Explorer', desc: 'Analyzed vocal tone', icon: Mic, unlocked: true, color: 'text-purple-400' },
-    { name: 'Self-Care Champ', desc: 'Logged 5-day mood streak', icon: Flame, unlocked: true, color: 'text-brand-amber' },
+  const moodOptions = [
+    { label: "I'm Good",       emoji: '😃', bg: 'bg-[#E3EBDC]', text: 'text-[#2D3B30]', border: 'border-[#D4E0CC]' },
+    { label: "I'm Okay",       emoji: '😐', bg: 'bg-[#FCEAD2]', text: 'text-[#6E4F28]', border: 'border-[#F8D8B0]' },
+    { label: "I'm Low",        emoji: '🙁', bg: 'bg-[#ECE7F2]', text: 'text-[#4A3D5A]', border: 'border-[#DCD0E8]' },
+    { label: "I'm Struggling", emoji: '😫', bg: 'bg-[#FDF0ED]', text: 'text-[#7A3E34]', border: 'border-[#F8DFD8]' },
+  ];
+
+  const recentCheckins = [
+    { date: 'May 10', score: 'PHQ-9: 4', level: 'Minimal', badgeBg: 'bg-[#E3EBDC]', badgeText: 'text-[#2D3B30]' },
+    { date: 'May 7',  score: 'PHQ-9: 6', level: 'Mild',    badgeBg: 'bg-[#FCEAD2]', badgeText: 'text-[#6E4F28]' },
+    { date: 'May 4',  score: 'PHQ-9: 9', level: 'Mild',    badgeBg: 'bg-[#FCEAD2]', badgeText: 'text-[#6E4F28]' },
+    { date: 'May 1',  score: 'PHQ-9: 12',level: 'Moderate',badgeBg: 'bg-[#FDF0ED]', badgeText: 'text-[#7A3E34]' },
   ];
 
   return (
-    <div className="space-y-8 animate-in relative z-10">
-
-      {/* Guided Breathing Modal */}
-      <GuidedBreathingModal isOpen={isBreathingOpen} onClose={() => setIsBreathingOpen(false)} />
-
-      {/* Header with Streak & Breathing Trigger */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8 max-w-7xl mx-auto text-[#2D3B30]">
+      
+      {/* ── GREETING & MOOD CHECK-IN ── */}
+      <div className="space-y-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-400/10 text-amber-400 border border-amber-400/30">
-              <Flame className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" /> 5-Day Wellness Streak!
-            </span>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, <span className="text-gradient">{user?.email?.split('@')[0] || 'Student'}</span> 👋
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight text-[#2D3B30] flex items-center gap-3">
+            <span>Good morning, {userName}</span>
+            <span className="text-3xl">🌿</span>
           </h1>
-          <p className="text-gray-400 mt-1">Here is your calming mental wellness overview.</p>
+          <p className="text-sm font-medium text-[#526656] mt-1">
+            How are you feeling today?
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setIsBreathingOpen(true)}
-            className="bg-gradient-to-r from-brand-amber to-amber-500 hover:from-yellow-400 hover:to-amber-600 text-[#0D1B2A] font-extrabold px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(233,196,106,0.3)] transition-all flex items-center gap-2"
-          >
-            <Sun className="w-4 h-4 text-[#0D1B2A]" />
-            4-7-8 Breathing Tool
-          </Button>
-
-          <Button
-            onClick={() => navigate('/assessment')}
-            className="bg-brand-teal hover:bg-brand-tealL text-white font-semibold px-6 py-2.5 rounded-full glow-teal transition-all flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            New Assessment
-          </Button>
+        {/* Mood Selector Pills */}
+        <div className="flex flex-wrap gap-3 pt-1">
+          {moodOptions.map((m, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedMood(m.label)}
+              className={`px-5 py-3 rounded-2xl border ${m.bg} ${m.text} ${m.border} font-bold text-xs flex items-center gap-2.5 transition-all shadow-2xs ${
+                selectedMood === m.label ? 'ring-2 ring-[#3A4D3F] scale-105' : 'hover:scale-102'
+              }`}
+            >
+              <span className="text-base">{m.emoji}</span>
+              <span>{m.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Badges & Streaks Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {badges.map((badge) => {
-          const Icon = badge.icon;
-          return (
-            <div key={badge.name} className="glass-card p-4 flex items-center gap-3.5 border-brand-teal/20 hover:border-brand-teal/40 transition-colors">
-              <div className={`w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0`}>
-                <Icon className={`w-5 h-5 ${badge.color}`} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm text-white flex items-center gap-1.5">
-                  {badge.name}
-                  <Award className="w-3.5 h-3.5 text-brand-amber" />
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">{badge.desc}</p>
-              </div>
+      {/* ── TOP ROW CARDS (Journal, Voice, Streak) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        {/* Mindful Journal */}
+        <div 
+          onClick={() => navigate('/mood')}
+          className="p-6 rounded-3xl bg-[#E3EBDC]/70 border border-[#D4E0CC] hover:bg-[#E3EBDC] transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#3A4D3F]/10 flex items-center justify-center text-[#3A4D3F]">
+              <BookOpen className="w-6 h-6" />
             </div>
-          );
-        })}
-      </div>
-
-      {/* Main Chart + Recent */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trend Chart */}
-        <div className="lg:col-span-2 glass-card p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-brand-tealL" />
-              <h2 className="text-lg font-semibold">PHQ-9 Wellness Score Trend</h2>
+            <div>
+              <h3 className="font-bold text-base text-[#2D3B30]">Mindful Journal</h3>
+              <p className="text-xs text-[#526656] font-medium mt-0.5">3 entries this week • Express & reflect</p>
             </div>
-            <span className="text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full border border-white/10">Last 30 days</span>
           </div>
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={history} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                <defs>
-                  <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0A9396" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#0A9396" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
-                <XAxis dataKey="date" stroke="#4b5563" tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis stroke="#4b5563" tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} domain={[0, 27]} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#0f2336', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', fontSize: '13px' }}
-                  itemStyle={{ color: '#94D2BD' }}
-                  formatter={(val: number) => [val, 'PHQ-9 Score']}
-                />
-                <Area type="monotone" dataKey="score" stroke="#0A9396" strokeWidth={2.5} fill="url(#scoreGrad)"
-                  dot={{ fill: '#0A9396', strokeWidth: 2, r: 5, stroke: '#0D1B2A' }}
-                  activeDot={{ r: 7, strokeWidth: 0, fill: '#94D2BD' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#3A4D3F] group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-4 h-4" />
           </div>
         </div>
 
-        {/* Recent Screenings */}
-        <div className="glass-card p-6 flex flex-col justify-between">
+        {/* Voice Reflection */}
+        <div 
+          onClick={() => navigate('/assessment')}
+          className="p-6 rounded-3xl bg-[#ECE7F2]/70 border border-[#DCD0E8] hover:bg-[#ECE7F2] transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#4A3D5A]/10 flex items-center justify-center text-[#4A3D5A]">
+              <Mic className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-[#2D3B30]">Voice Reflection</h3>
+              <p className="text-xs text-[#526656] font-medium mt-0.5">Your latest reflection is ready to view</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#4A3D5A] group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* Self-care Streak */}
+        <div 
+          onClick={() => navigate('/mood')}
+          className="p-6 rounded-3xl bg-[#FDF0ED]/70 border border-[#F8DFD8] hover:bg-[#FDF0ED] transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#7A3E34]/10 flex items-center justify-center text-[#7A3E34]">
+              <Flame className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-[#2D3B30]">Self-care Streak</h3>
+              <p className="text-xs text-[#526656] font-medium mt-0.5">5 day check-in streak • Showing up for yourself</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#7A3E34] group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── MIDDLE ROW: WELLBEING JOURNEY & RECENT CHECK-INS ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left (8 cols): Your Wellbeing Journey Chart */}
+        <div className="lg:col-span-8 p-7 rounded-3xl bg-white border border-[#E3EBDC] shadow-xs space-y-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-serif text-xl font-bold text-[#2D3B30]">Your wellbeing journey</h3>
+              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF7F2] border border-[#E3EBDC] text-[#526656]">
+                Last 10 days ▾
+              </span>
+            </div>
+            <p className="text-xs text-[#526656] font-medium">Here's how you've been feeling over the past 10 days.</p>
+          </div>
+
+          {/* SVG Journey Curve Chart */}
+          <div className="relative py-4">
+            <div className="flex justify-between items-center text-[10px] text-[#526656] font-bold pb-2 border-b border-dashed border-[#E3EBDC]">
+              <span>Doing well</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-[#526656] font-bold py-6 border-b border-dashed border-[#E3EBDC]">
+              <span>Okay</span>
+            </div>
+            <div className="flex justify-between items-center text-[10px] text-[#7A3E34] font-bold pt-2">
+              <span>Finding it difficult</span>
+            </div>
+
+            {/* Smooth Sage Green Trend Line */}
+            <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+              <path
+                d="M 50 70 Q 150 40 250 55 T 450 75 T 650 60"
+                fill="none"
+                stroke="#6E8B74"
+                strokeWidth="3"
+              />
+              <circle cx="50"  cy="70" r="5" fill="#6E8B74" />
+              <circle cx="170" cy="48" r="5" fill="#6E8B74" />
+              <circle cx="290" cy="55" r="5" fill="#6E8B74" />
+              <circle cx="410" cy="72" r="5" fill="#6E8B74" />
+              <circle cx="530" cy="65" r="5" fill="#6E8B74" />
+              <circle cx="650" cy="60" r="5" fill="#6E8B74" />
+            </svg>
+          </div>
+
+          <div className="flex justify-between text-[11px] text-[#526656] font-semibold pt-2 px-2">
+            <span>May 1</span>
+            <span>May 3</span>
+            <span>May 5</span>
+            <span>May 7</span>
+            <span>May 9</span>
+            <span>May 10</span>
+          </div>
+
+          {/* Bottom Encouragement Banner */}
+          <div className="p-3.5 rounded-2xl bg-[#E3EBDC] border border-[#D4E0CC] text-xs font-bold text-[#3A4D3F] flex items-center gap-2">
+            <span>🌿</span>
+            <span>You've been feeling better lately. Keep taking care of yourself! 💚</span>
+          </div>
+        </div>
+
+        {/* Right (4 cols): Your Recent Check-ins */}
+        <div className="lg:col-span-4 p-7 rounded-3xl bg-white border border-[#E3EBDC] shadow-xs flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-brand-amber" />
-                <h2 className="text-lg font-semibold">Recent Screenings</h2>
-              </div>
+              <h3 className="font-serif text-xl font-bold text-[#2D3B30]">Your recent check-ins</h3>
+              <button 
+                onClick={() => navigate('/history')}
+                className="text-xs font-semibold text-[#526656] hover:text-[#3A4D3F]"
+              >
+                View all
+              </button>
             </div>
+
             <div className="space-y-3">
-              {history.slice().reverse().map((item) => {
-                const style = RISK_STYLES[item.risk_level.toLowerCase()] ?? RISK_STYLES.minimal;
-                return (
-                  <div key={item.id} onClick={() => navigate('/history')} className="flex items-center justify-between p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.07] transition-colors cursor-pointer">
-                    <div>
-                      <p className="text-sm font-medium text-gray-200">{item.date}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">PHQ-9: <span className="text-white">{item.score}</span></p>
-                    </div>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${style.text} ${style.bg} ${style.border}`}>
-                      {item.risk_level}
-                    </span>
+              {recentCheckins.map((item, i) => (
+                <div 
+                  key={i}
+                  onClick={() => navigate('/history')}
+                  className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E3EBDC] hover:border-[#6E8B74] transition-all flex items-center justify-between cursor-pointer group"
+                >
+                  <div>
+                    <p className="text-xs font-bold text-[#2D3B30]">{item.date}</p>
+                    <p className="text-[11px] text-[#526656] font-medium">{item.score}</p>
                   </div>
-                );
-              })}
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${item.badgeBg} ${item.badgeText}`}>
+                      {item.level}
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 text-[#526656] group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          <Button variant="outline" className="w-full mt-4 text-xs border-white/10 text-gray-300 hover:bg-white/5" onClick={() => navigate('/history')}>
-            View Complete History
-          </Button>
+          <button 
+            onClick={() => navigate('/history')}
+            className="w-full py-3 rounded-2xl bg-[#FDF0ED] hover:bg-[#F8DFD8] text-[#7A3E34] font-bold text-xs transition-all shadow-2xs"
+          >
+            View complete history
+          </button>
         </div>
+
       </div>
 
-      {/* Quick Launch Tools */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { icon: ClipboardList, title: 'Full Assessment', desc: 'PHQ-9 + Text + Voice multimodal screening', action: () => navigate('/assessment'), color: 'text-brand-tealL' },
-          { icon: Heart, title: 'Daily Mood Tracker', desc: 'Check in with emojis and log daily triggers', action: () => navigate('/mood'), color: 'text-brand-coral' },
-          { icon: Sun, title: '4-7-8 Breathing Tool', desc: 'Calming guided breathing technique', action: () => setIsBreathingOpen(true), color: 'text-brand-amber' },
-        ].map((tool) => {
-          const Icon = tool.icon;
-          return (
-            <button key={tool.title} onClick={tool.action} className="glass-card p-5 text-left hover:scale-[1.02] transition-transform duration-200 group">
-              <Icon className={`w-6 h-6 ${tool.color} mb-3`} />
-              <p className="font-semibold text-white text-sm">{tool.title}</p>
-              <p className="text-xs text-gray-400 mt-1 leading-relaxed">{tool.desc}</p>
-            </button>
-          );
-        })}
+      {/* ── BOTTOM ROW: 3 ACTION CARDS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        
+        {/* Complete a check-in */}
+        <div 
+          onClick={() => navigate('/assessment')}
+          className="p-6 rounded-3xl bg-[#E3EBDC]/80 border border-[#D4E0CC] hover:bg-[#E3EBDC] transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#3A4D3F]/10 flex items-center justify-center text-[#3A4D3F]">
+              <Calendar className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-[#2D3B30]">Complete a check-in</h4>
+              <p className="text-xs text-[#526656] font-medium mt-0.5">Understand how you've been feeling</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#3A4D3F] group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* Take a moment to breathe */}
+        <div 
+          onClick={() => setShowBreathingModal(true)}
+          className="p-6 rounded-3xl bg-[#FDF0ED]/80 border border-[#F8DFD8] hover:bg-[#FDF0ED] transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#7A3E34]/10 flex items-center justify-center text-[#7A3E34]">
+              <Wind className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-[#2D3B30]">Take a moment to breathe</h4>
+              <p className="text-xs text-[#526656] font-medium mt-0.5">Calm your mind with guided breathing</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#7A3E34] group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* Explore self-care */}
+        <div 
+          onClick={() => navigate('/mood')}
+          className="p-6 rounded-3xl bg-[#FCEAD2]/80 border border-[#F8D8B0] hover:bg-[#FCEAD2] transition-all cursor-pointer flex items-center justify-between group shadow-2xs"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#6E4F28]/10 flex items-center justify-center text-[#6E4F28]">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-[#2D3B30]">Explore self-care</h4>
+              <p className="text-xs text-[#526656] font-medium mt-0.5">Small steps to take care of yourself</p>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-[#6E4F28] group-hover:translate-x-1 transition-transform">
+            <ChevronRight className="w-4 h-4" />
+          </div>
+        </div>
+
       </div>
+
+      <GuidedBreathingModal isOpen={showBreathingModal} onClose={() => setShowBreathingModal(false)} />
     </div>
   );
 }
