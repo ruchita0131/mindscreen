@@ -24,7 +24,7 @@ export default function SukhoonChat() {
     {
       id: 'welcome',
       sender: 'sukhoon',
-      content: "Namaste & Welcome. I am Sukhoon (سکون / सुकून), your empathetic AI companion. I'm right here with you to listen without judgment and help unpack whatever is weighing on your heart today.\n\nHow are you feeling right now?",
+      content: "Namaste 🌿 I'm Saathi.\nI'm here to listen, help you reflect, or simply sit with you for a while.\n\nWhat's on your mind today?",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
   ]);
@@ -82,8 +82,7 @@ export default function SukhoonChat() {
 
       setMessages((prev) => [...prev, sukhoonReply]);
     } catch (err) {
-      console.error("Sukhoon AI companion error:", err);
-      // Fallback message
+      console.error("Saathi companion error:", err);
       const fallbackMsg: ChatMessage = {
         id: `sukhoon-fb-${Date.now()}`,
         sender: 'sukhoon',
@@ -105,20 +104,21 @@ export default function SukhoonChat() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       
-      {/* ── HEADER — SUKHOON AI COMPANION ── */}
+      {/* ── HEADER — SAATHI WELLBEING COMPANION ── */}
       <div className="glass-card p-6 sm:p-8 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-[#81B29A]/30">
         <div className="space-y-2 relative z-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 text-[#94D2BD] text-xs font-bold uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Sukhoon (سکون / सुकून) • Empathetic AI Companion</span>
+            <span>Saathi 🌿 • Your Wellbeing Companion</span>
           </div>
           <h1 className="font-serif-title text-3xl sm:text-4xl italic text-[#FFE8C2]">
-            Always-There Emotional Support
+            Namaste 🌿 Talk to Saathi
           </h1>
           <p className="text-sm text-[#F0C0C6] font-medium max-w-xl">
-            Unpack what's on your mind with Sukhoon, your daily therapeutic companion. Share feelings without judgment and get personalized grounding exercises.
+            I'm here to listen, help you reflect, or simply sit with you for a while. Share whatever is on your mind today.
           </p>
         </div>
+
 
         {/* Floating Glowing Companion Orb */}
         <div className="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
