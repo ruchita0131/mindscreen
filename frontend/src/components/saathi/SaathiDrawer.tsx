@@ -119,32 +119,32 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
               className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs"
             />
 
-            {/* Sliding Drawer Content */}
+            {/* Sliding Drawer Content (Twilight Theme) */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="relative w-full max-w-md bg-[#FAF7F2] text-[#2D3B30] h-full shadow-2xl flex flex-col justify-between z-10 border-l border-[#D4E0CC]"
+              className="relative w-full max-w-md bg-[#1B1622] text-[#E6E2EB] h-full shadow-2xl flex flex-col justify-between z-10 border-l border-[#81B29A]/30"
             >
               
               {/* Drawer Header */}
-              <div className="p-5 bg-[#E3EBDC] border-b border-[#D4E0CC] flex items-center justify-between">
+              <div className="p-5 bg-[#241D2B] border-b border-[#81B29A]/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#3A4D3F] flex items-center justify-center text-[#E3EBDC] shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 flex items-center justify-center text-[#94D2BD] shadow-sm">
                     <span className="text-lg">🌿</span>
                   </div>
                   <div>
-                    <h2 className="font-serif text-lg font-bold text-[#2D3B30] leading-tight">
+                    <h2 className="font-serif-title text-lg font-bold text-[#FFE8C2] leading-tight">
                       Saathi
                     </h2>
-                    <p className="text-xs text-[#526656] font-medium">Your wellbeing companion</p>
+                    <p className="text-xs text-[#94D2BD] font-medium">Your wellbeing companion</p>
                   </div>
                 </div>
 
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/60 hover:bg-white text-[#2D3B30] flex items-center justify-center transition-all"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-[#FFE8C2] flex items-center justify-center transition-all"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -160,40 +160,40 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
                     className={`flex gap-2.5 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {m.sender === 'saathi' && (
-                      <div className="w-7 h-7 rounded-full bg-[#6E8B74] text-white flex items-center justify-center text-xs flex-shrink-0 mt-1 shadow-xs">
+                      <div className="w-7 h-7 rounded-full bg-[#81B29A] text-slate-950 flex items-center justify-center text-xs flex-shrink-0 mt-1 shadow-xs font-bold">
                         🌿
                       </div>
                     )}
 
-                    <div className={`max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed space-y-2 shadow-xs ${
+                    <div className={`max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed space-y-2 shadow-sm ${
                       m.sender === 'user'
-                        ? 'bg-[#3A4D3F] text-[#FAF7F2] font-medium rounded-tr-xs'
-                        : 'bg-white text-[#2D3B30] border border-[#E3EBDC] rounded-tl-xs'
+                        ? 'bg-[#81B29A] text-slate-950 font-bold rounded-tr-xs'
+                        : 'bg-[#241D2B] text-[#F0C0C6] border border-[#81B29A]/30 rounded-tl-xs'
                     }`}>
                       <p className="whitespace-pre-line font-medium">{m.content}</p>
 
                       {/* Recommended Activity Card */}
                       {m.recommended_activity && (
-                        <div className="mt-3 p-3 rounded-xl bg-[#FAF7F2] border border-[#D4E0CC] flex items-center justify-between gap-2 shadow-2xs">
+                        <div className="mt-3 p-3 rounded-xl bg-[#1B1622] border border-[#81B29A]/40 flex items-center justify-between gap-2 shadow-2xs">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-[#E3EBDC] flex items-center justify-center text-[#3A4D3F]">
+                            <div className="w-7 h-7 rounded-lg bg-[#81B29A]/20 flex items-center justify-center text-[#94D2BD]">
                               <Wind className="w-3.5 h-3.5" />
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-[#2D3B30]">{m.recommended_activity.title}</p>
-                              <p className="text-[10px] text-[#526656]">{m.recommended_activity.category} • {m.recommended_activity.duration}</p>
+                              <p className="text-xs font-bold text-[#FFE8C2]">{m.recommended_activity.title}</p>
+                              <p className="text-[10px] text-[#94D2BD]">{m.recommended_activity.category} • {m.recommended_activity.duration}</p>
                             </div>
                           </div>
                           <button
                             onClick={() => setShowBreathingModal(true)}
-                            className="px-2.5 py-1 rounded-full bg-[#3A4D3F] hover:bg-[#2D3B30] text-[#FAF7F2] font-bold text-[11px] flex items-center gap-1 transition-all"
+                            className="px-2.5 py-1 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-[11px] flex items-center gap-1 transition-all"
                           >
                             <Play className="w-2.5 h-2.5 fill-current" /> Start
                           </button>
                         </div>
                       )}
 
-                      <div className={`text-[10px] text-right ${m.sender === 'user' ? 'text-[#FAF7F2]/70' : 'text-[#526656]/70'}`}>
+                      <div className={`text-[10px] text-right ${m.sender === 'user' ? 'text-slate-900/70' : 'text-[#94D2BD]/70'}`}>
                         {m.timestamp}
                       </div>
                     </div>
@@ -201,7 +201,7 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
                 ))}
 
                 {isLoading && (
-                  <div className="flex items-center gap-2 text-xs text-[#526656] italic">
+                  <div className="flex items-center gap-2 text-xs text-[#94D2BD] italic font-medium">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     <span>Saathi is thinking...</span>
                   </div>
@@ -211,12 +211,12 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
               </div>
 
               {/* Quick Prompts */}
-              <div className="px-5 py-2 border-t border-[#E3EBDC] bg-[#F7F4EE] flex gap-2 overflow-x-auto no-scrollbar">
+              <div className="px-4 py-2.5 border-t border-[#81B29A]/20 bg-[#241D2B]/80 flex gap-2 overflow-x-auto no-scrollbar">
                 {quickPrompts.map((qp, i) => (
                   <button
                     key={i}
                     onClick={() => handleSendMessage(qp)}
-                    className="px-3 py-1.5 rounded-full bg-white border border-[#D4E0CC] hover:bg-[#E3EBDC] text-[11px] font-semibold text-[#3A4D3F] whitespace-nowrap transition-all shadow-2xs"
+                    className="px-3 py-1.5 rounded-full bg-[#1B1622] border border-[#81B29A]/30 hover:border-[#81B29A] text-[11px] font-semibold text-[#94D2BD] whitespace-nowrap transition-all shadow-2xs"
                   >
                     🌿 {qp.length > 28 ? qp.substring(0, 28) + '...' : qp}
                   </button>
@@ -229,24 +229,25 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
                   e.preventDefault();
                   handleSendMessage();
                 }}
-                className="p-4 bg-white border-t border-[#E3EBDC] flex items-center gap-2"
+                className="p-4 bg-[#1B1622] border-t border-[#81B29A]/20 flex items-center gap-2"
               >
                 <input
                   type="text"
                   value={inputMsg}
                   onChange={(e) => setInputMsg(e.target.value)}
                   placeholder="Talk to Saathi..."
-                  className="flex-1 bg-[#FAF7F2] border border-[#D4E0CC] focus:border-[#3A4D3F] rounded-full px-4 py-2.5 text-xs text-[#2D3B30] placeholder-[#526656]/60 focus:outline-none transition-all"
+                  className="flex-1 bg-[#241D2B] border border-[#81B29A]/30 focus:border-[#94D2BD] rounded-full px-4 py-2.5 text-xs text-[#FFE8C2] placeholder-[#F0C0C6]/60 focus:outline-none transition-all"
                 />
                 <button
                   type="submit"
                   disabled={!inputMsg.trim() || isLoading}
-                  className="w-10 h-10 rounded-full bg-[#3A4D3F] hover:bg-[#2D3B30] disabled:opacity-40 text-[#FAF7F2] font-bold flex items-center justify-center transition-all flex-shrink-0 shadow-sm"
+                  className="w-10 h-10 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] disabled:opacity-40 text-slate-950 font-bold flex items-center justify-center transition-all flex-shrink-0 shadow-sm"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </form>
             </motion.div>
+
           </div>
         )}
       </AnimatePresence>
