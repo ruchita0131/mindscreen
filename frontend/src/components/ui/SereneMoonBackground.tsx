@@ -32,54 +32,52 @@ export const SereneMoonBackground: React.FC = () => {
           scale: sphereScale,
           y: sphereY,
         }}
-        className="absolute -bottom-[480px] sm:-bottom-[640px] md:-bottom-[800px] left-1/2 -translate-x-1/2 w-[980px] h-[980px] sm:w-[1300px] sm:h-[1300px] md:w-[1620px] md:h-[1620px] rounded-full origin-bottom"
+        className="absolute -bottom-[580px] sm:-bottom-[760px] md:-bottom-[940px] left-1/2 -translate-x-1/2 w-[980px] h-[980px] sm:w-[1300px] sm:h-[1300px] md:w-[1620px] md:h-[1620px] rounded-full origin-bottom"
       >
-        {/* Concentric Moonlight Aura Halos */}
+        {/* Atmospheric Aura Halo */}
         <motion.div
           className="absolute -inset-16 rounded-full"
           style={{
             opacity: haloOpacity,
-            background: 'radial-gradient(circle at 50% 50%, rgba(255, 232, 194, 0.40) 0%, rgba(243, 200, 130, 0.20) 50%, rgba(29, 23, 34, 0) 80%)',
-            filter: 'blur(30px)',
+            background: 'radial-gradient(circle at 50% 50%, rgba(243, 200, 130, 0.25) 0%, rgba(226, 157, 82, 0.12) 50%, rgba(29, 23, 34, 0) 80%)',
+            filter: 'blur(35px)',
           }}
         />
 
-        {/* Luminous Core Sphere (Casa Di Solare Golden Sun/Moon) */}
+        {/* Core Sphere (Serene Sunset Amber / Warm Gold - Non Blinding) */}
         <div
           className="w-full h-full rounded-full relative overflow-hidden"
           style={{
             background: `
-              radial-gradient(circle at 45% 30%, 
-                #FFFFFF 0%, 
-                #FFF4D4 18%, 
-                #FFE0A3 38%, 
-                #F4C47F 58%, 
-                #E29D52 78%, 
-                #8E562A 92%, 
-                #3B2218 100%
+              radial-gradient(circle at 48% 25%, 
+                #FFE0A3 0%, 
+                #F4C47F 22%, 
+                #E29D52 45%, 
+                #C27334 68%, 
+                #7A3D1E 85%, 
+                #2D1814 100%
               )
             `,
             boxShadow: `
-              0 -20px 180px rgba(255, 232, 194, 0.75),
-              0 -10px 80px rgba(244, 196, 127, 0.50),
-              inset 0 0 100px rgba(255, 255, 255, 0.60)
+              0 -15px 120px rgba(244, 196, 127, 0.40),
+              inset 0 0 80px rgba(255, 224, 163, 0.35)
             `,
           }}
         >
-          {/* Subtle Surface Haze & Craters */}
-          <div className="absolute top-[20%] left-[30%] w-[35%] h-[25%] rounded-full bg-[#E29D52]/20 blur-2xl transform -rotate-12" />
-          <div className="absolute top-[35%] left-[48%] w-[38%] h-[28%] rounded-full bg-[#8E562A]/25 blur-3xl transform rotate-6" />
-          <div className="absolute top-[25%] left-[62%] w-[25%] h-[20%] rounded-full bg-[#FFE0A3]/15 blur-xl" />
+          {/* Surface Haze & Craters */}
+          <div className="absolute top-[20%] left-[30%] w-[35%] h-[25%] rounded-full bg-[#7A3D1E]/20 blur-2xl transform -rotate-12" />
+          <div className="absolute top-[35%] left-[48%] w-[38%] h-[28%] rounded-full bg-[#2D1814]/25 blur-3xl transform rotate-6" />
 
-          {/* Spherical Limb Darkening / Soft Atmosphere */}
+          {/* Twilight Atmosphere Vignette */}
           <div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-full pointer-events-none"
             style={{
-              background: 'radial-gradient(circle at 42% 28%, transparent 45%, rgba(29, 23, 34, 0.60) 82%, rgba(20, 15, 24, 0.95) 100%)',
+              background: 'radial-gradient(circle at 45% 25%, transparent 35%, rgba(27, 22, 34, 0.55) 75%, rgba(20, 15, 24, 0.90) 100%)',
             }}
           />
         </div>
       </motion.div>
+
 
       {/* ── FLOATING MOONLIGHT STARDUST ── */}
       {[...Array(16)].map((_, i) => (

@@ -68,39 +68,42 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* DYNAMIC EDITORIAL HEADING ("MindScreen") — FLOATS IN 3D SANCTUARY SPACE */}
+          {/* DYNAMIC EDITORIAL HEADING ("MindScreen") — FLOATS IN 3D SANCTUARY SPACE WITH HIGH CONTRAST */}
           <motion.div
             style={{
               opacity: titleOpacity,
               scale: titleScale,
               y: titleY,
             }}
-            className="text-center my-auto z-20 py-8"
+            className="text-center my-auto z-20 py-6"
           >
-            <h1 className="font-serif-title text-6xl sm:text-8xl md:text-9xl lg:text-[11rem] italic font-normal tracking-tight leading-[0.88] mb-6 text-gradient-solare drop-shadow-2xl">
-              MindScreen
-            </h1>
-            
-            <p className="text-base sm:text-xl text-[#F0C0C6] max-w-xl mx-auto font-normal leading-relaxed mb-10 px-4">
-              A serene clinical screening sanctuary integrating PHQ-9 metrics, MentalBERT semantics, and voice acoustics.
-            </p>
+            <div className="max-w-2xl mx-auto p-8 sm:p-12 rounded-[2.5rem] bg-[#1B1622]/88 border border-[#81B29A]/35 backdrop-blur-2xl shadow-[0_25px_60px_rgba(0,0,0,0.75)]">
+              <h1 className="font-serif-title text-6xl sm:text-8xl md:text-9xl italic font-semibold tracking-tight leading-[0.88] mb-6 text-[#FFE8C2] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
+                MindScreen
+              </h1>
+              
+              <p className="text-base sm:text-xl text-[#F0C0C6] font-medium leading-relaxed mb-8 px-2">
+                A serene clinical screening sanctuary integrating PHQ-9 metrics, MentalBERT semantics, and voice acoustics.
+              </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button 
-                onClick={() => navigate('/dashboard')}
-                className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm px-8 py-4 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.45)] transition-all flex items-center justify-center gap-2"
-              >
-                Start Assessment <ArrowRight className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => window.scrollTo({ top: 900, behavior: 'smooth' })}
-                className="border-[#E8B4B8]/40 text-[#E8B4B8] hover:bg-[#81B29A]/15 hover:text-[#94D2BD] text-sm px-8 py-4 rounded-full transition-all backdrop-blur-md font-medium"
-              >
-                Explore Methodology
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button 
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm px-8 py-4 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.45)] transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                >
+                  Start Assessment <ArrowRight className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => window.scrollTo({ top: 900, behavior: 'smooth' })}
+                  className="border-[#E8B4B8]/40 text-[#E8B4B8] hover:bg-[#81B29A]/15 hover:text-[#94D2BD] text-sm px-8 py-4 rounded-full transition-all backdrop-blur-md font-medium w-full sm:w-auto"
+                >
+                  Explore Methodology
+                </Button>
+              </div>
             </div>
           </motion.div>
+
 
           {/* CASA DI SOLARE SCREENSHOT 1 SCROLL PROMPT PILL */}
           <motion.div
