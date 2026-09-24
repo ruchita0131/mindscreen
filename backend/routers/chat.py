@@ -243,13 +243,28 @@ def talk_to_saathi(req: ChatRequest):
 
     # ── Step 3: Fallback to rich rule-based engine ────────────────────────────
     final_reply = llm_reply if llm_reply else get_fallback_reply(topic, turn_count)
-    activity    = ACTIVITIES.get(topic, ACTIVITIES["general"])
+
+    # ── Step 4: Smart activity suggestion — NOT forced every turn ─────────────
+    # High-distress topics (anxiety, sleep): offer on first message + every 3 turns.
+    # Emotional topics (family, academic, lonely): offer only after turn 1, every 4 turns.
+    # General / positive: never push the activity card — let the conversation breathe.
+    HIGH_DISTRESS = {"anxiety", "sleep"}
+    EMOTIONAL     = {"family", "academic", "lonely"}
+
+    suggest = False
+    if topic in HIGH_DISTRESS:
+        suggest = (turn_count == 0) or (turn_count % 3 == 0)
+    elif topic in EMOTIONAL:
+        suggest = (turn_count > 0) and (turn_count % 4 == 0)
+    # "general" and "positive" → suggest = False (no card)
+
+    activity_payload = RecommendedActivity(**ACTIVITIES.get(topic, ACTIVITIES["general"])) if suggest else None
 
     return ChatResponse(
         reply=final_reply,
         companion_name="Saathi",
         tagline="Your wellbeing companion",
-        recommended_activity=RecommendedActivity(**activity),
+        recommended_activity=activity_payload,
         crisis_flag=False,
         helpline_info=None
     )

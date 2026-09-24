@@ -72,19 +72,19 @@ export const GuidedBreathingModal: React.FC<GuidedBreathingModalProps> = ({ isOp
   };
 
   const stopAmbientMusic = () => {
-    if (gainNodeRef.current && audioCtxRef.current) {
-      const ctx = audioCtxRef.current;
-      gainNodeRef.current.gain.setValueAtTime(gainNodeRef.current.gain.value, ctx.currentTime);
-      gainNodeRef.current.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
-      setTimeout(() => {
-        oscillatorsRef.current.forEach((osc) => {
-          try { osc.stop(); } catch {}
-        });
-        oscillatorsRef.current = [];
-        try { ctx.close(); } catch {}
-        audioCtxRef.current = null;
-      }, 1300);
-    }
+    if (!audioCtxRef.current) return;
+    const ctx = audioCtxRef.current;
+    // Null the ref immediately so double-calls don't close an already-closed context
+    audioCtxRef.current = null;
+    gainNodeRef.current = null;
+    oscillatorsRef.current.forEach((osc) => {
+      try { osc.stop(); } catch {}
+    });
+    oscillatorsRef.current = [];
+    // Fade out then close
+    try {
+      ctx.close();
+    } catch {}
   };
 
   const toggleMute = () => {
