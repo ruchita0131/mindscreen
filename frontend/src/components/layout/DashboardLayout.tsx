@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/AuthContext';
-import { LayoutDashboard, ClipboardList, LogOut, History, Heart, ChevronRight, Brain, ShieldAlert, Sparkles, MessageSquareHeart } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, LogOut, History, Heart, ChevronRight, Brain, MessageSquareHeart } from 'lucide-react';
 import { SaathiDrawer } from '../saathi/SaathiDrawer';
 
 export function DashboardLayout() {
@@ -16,12 +16,11 @@ export function DashboardLayout() {
   };
 
   const navItems = [
-    { name: 'Dashboard',         path: '/dashboard',  icon: LayoutDashboard,    description: 'Overview & trends' },
-    { name: 'Saathi Companion', path: '/sukhoon',    icon: MessageSquareHeart, description: 'Your wellbeing companion' },
-    { name: 'New Assessment',    path: '/assessment', icon: ClipboardList,      description: 'Start screening' },
-    { name: 'History',           path: '/history',    icon: History,            description: 'Past results' },
-    { name: 'Mood Tracker',      path: '/mood',       icon: Heart,              description: 'Daily check-in' },
-    { name: 'Counselor Portal',  path: '/counselor',  icon: ShieldAlert,        description: 'Privacy oversight', isSpecial: true },
+    { name: 'Dashboard',         path: '/dashboard',  icon: LayoutDashboard },
+    { name: 'Saathi Companion', path: '/sukhoon',    icon: MessageSquareHeart },
+    { name: 'New Assessment',    path: '/assessment', icon: ClipboardList },
+    { name: 'History',           path: '/history',    icon: History },
+    { name: 'Mood Tracker',      path: '/mood',       icon: Heart },
   ];
 
   return (
@@ -32,34 +31,33 @@ export function DashboardLayout() {
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           background: `
-            radial-gradient(ellipse 70% 50% at 10% 10%, rgba(198, 172, 214, 0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 50% at 90% 80%, rgba(142, 168, 195, 0.08) 0%, transparent 60%)
+            radial-gradient(ellipse 70% 50% at 10% 10%, rgba(198, 172, 214, 0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 50% at 90% 80%, rgba(142, 168, 195, 0.05) 0%, transparent 60%)
           `,
         }}
       />
 
-      {/* ── SIDEBAR ── */}
+      {/* ── SLEEK EDITORIAL SIDEBAR ── */}
       <aside 
-        className="w-64 flex-shrink-0 bg-[#261F2E]/60 border-r border-[#C6ACD6]/15 flex flex-col relative z-20 backdrop-blur-xl"
+        className="w-60 flex-shrink-0 bg-[#241D2B]/75 border-r border-[#81B29A]/15 flex flex-col relative z-20 backdrop-blur-xl"
       >
         {/* Logo */}
-        <div className="p-6 border-b border-[#C6ACD6]/15">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#81B29A]/15 border border-[#81B29A]/30 flex items-center justify-center">
-              <Brain className="text-[#94D2BD] w-5 h-5" />
+        <div className="p-5 border-b border-[#81B29A]/15">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-8 h-8 rounded-xl bg-[#81B29A]/15 border border-[#81B29A]/30 flex items-center justify-center transition-transform group-hover:scale-105">
+              <Brain className="text-[#94D2BD] w-4 h-4" />
             </div>
             <div>
-              <h1 className="font-serif-title text-xl font-bold tracking-wider text-[#FFE8C2]">MindScreen</h1>
-              <p className="text-[10px] text-[#C6ACD6]/60 uppercase tracking-widest">
-                Multimodal AI Screening
+              <h1 className="font-serif-title text-xl font-bold tracking-wider text-[#FFE8C2] leading-none">MindScreen</h1>
+              <p className="text-[9px] text-[#94D2BD] uppercase tracking-widest mt-1">
+                Clinical Sanctuary
               </p>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
-          <p className="text-[10px] text-[#C6ACD6]/50 uppercase tracking-widest px-3 mb-3">Navigation</p>
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -67,29 +65,22 @@ export function DashboardLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-sm ${
                   isActive
-                    ? item.isSpecial
-                      ? 'bg-[#FFE8C2]/15 text-[#FFE8C2] border border-[#FFE8C2]/30 font-bold shadow-[0_0_15px_rgba(255,232,194,0.15)]'
-                      : 'bg-[#81B29A]/15 text-[#94D2BD] border border-[#81B29A]/30 font-semibold'
-                    : item.isSpecial
-                    ? 'text-[#FFE8C2]/80 hover:text-[#FFE8C2] hover:bg-[#FFE8C2]/10 border border-[#FFE8C2]/20 mt-4'
-                    : 'text-[#C6ACD6]/70 hover:text-white hover:bg-white/[0.06]'
+                    ? 'bg-[#81B29A]/15 text-[#94D2BD] border border-[#81B29A]/30 font-semibold shadow-xs'
+                    : 'text-[#E8B4B8]/70 hover:text-[#FFE8C2] hover:bg-white/[0.04]'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                   isActive
-                    ? item.isSpecial ? 'bg-[#FFE8C2]/25' : 'bg-[#81B29A]/25'
-                    : item.isSpecial ? 'bg-[#FFE8C2]/10' : 'bg-white/5 group-hover:bg-white/10'
+                    ? 'bg-[#81B29A]/20 text-[#94D2BD]'
+                    : 'bg-white/5 text-[#E8B4B8]/60 group-hover:bg-white/10 group-hover:text-[#FFE8C2]'
                 }`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm leading-tight">{item.name}</p>
-                  <p className="text-[11px] text-[#C6ACD6]/50 leading-tight">{item.description}</p>
-                </div>
+                <span className="font-medium">{item.name}</span>
                 {isActive && (
-                  <ChevronRight className={`w-3.5 h-3.5 ml-auto flex-shrink-0 ${item.isSpecial ? 'text-[#FFE8C2]' : 'text-[#94D2BD]'}`} />
+                  <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#94D2BD] flex-shrink-0" />
                 )}
               </Link>
             );
@@ -97,39 +88,39 @@ export function DashboardLayout() {
         </nav>
 
         {/* User Footer */}
-        <div className="p-3 border-t border-[#C6ACD6]/15">
-          <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/[0.04] mb-2 border border-white/5">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#81B29A] via-[#8EA8C3] to-[#C6ACD6] flex items-center justify-center text-slate-950 font-bold text-sm flex-shrink-0">
+        <div className="p-3 border-t border-[#81B29A]/15">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.03] mb-1.5 border border-white/5">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#81B29A] via-[#94D2BD] to-[#FFE8C2] flex items-center justify-center text-slate-950 font-bold text-xs flex-shrink-0">
               {user?.email?.charAt(0).toUpperCase() || 'S'}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate text-slate-100">{user?.email?.split('@')[0] || 'Student'}</p>
-              <p className="text-[11px] text-[#C6ACD6]/60 truncate">{user?.email || 'demo@mindscreen.ai'}</p>
+              <p className="text-xs font-semibold truncate text-[#FFE8C2]">{user?.email?.split('@')[0] || 'User'}</p>
+              <p className="text-[10px] text-[#E8B4B8]/50 truncate">{user?.email || 'patient@mindscreen.org'}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#C6ACD6]/70 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#E8B4B8]/60 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-xs"
           >
-            <LogOut className="w-4 h-4" />
-            Sign Out
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Content Viewport */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative z-10">
-        <div className="relative z-10 p-8 max-w-7xl mx-auto min-h-full">
+        <div className="p-6 sm:p-8 max-w-6xl mx-auto min-h-full">
           <Outlet />
         </div>
       </main>
 
-      {/* Persistent Floating Button: 🌿 Talk to Saathi */}
+      {/* Floating Button: 🌿 Talk to Saathi */}
       <button
         onClick={() => setIsSaathiOpen(true)}
-        className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm shadow-[0_0_25px_rgba(129,178,154,0.45)] flex items-center gap-2.5 transition-all hover:scale-105"
+        className="fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-xs shadow-[0_0_20px_rgba(129,178,154,0.4)] flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
       >
-        <span className="text-base">🌿</span>
+        <span>🌿</span>
         <span>Talk to Saathi</span>
       </button>
 

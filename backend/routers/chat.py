@@ -142,6 +142,49 @@ def get_fallback_reply(topic: str, turn_count: int) -> str:
     pool = FALLBACK_RESPONSES.get(topic, FALLBACK_RESPONSES["general"])
     return pool[turn_count % len(pool)]
 
+def call_gemini_llm(message: str, history: List[ChatMessage], gemini_key: str) -> Optional[str]:
+    """
+    Call Google Gemini 1.5 Flash via official REST API.
+    Lightweight, fast (<1s), warm conversational output.
+    """
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+        contents = []
+        for msg in history[-8:]:
+            role = "user" if msg.sender == "user" else "model"
+            contents.append({
+                "role": role,
+                "parts": [{"text": msg.content}]
+            })
+        contents.append({
+            "role": "user",
+            "parts": [{"text": message}]
+        })
+        payload = {
+            "system_instruction": {
+                "parts": [{"text": SYSTEM_PROMPT}]
+            },
+            "contents": contents,
+            "generationConfig": {
+                "temperature": 0.7,
+                "maxOutputTokens": 350
+            }
+        }
+        resp = requests.post(url, json=payload, timeout=15)
+        if resp.status_code == 200:
+            data = resp.json()
+            candidates = data.get("candidates", [])
+            if candidates and "content" in candidates[0]:
+                parts = candidates[0]["content"].get("parts", [])
+                if parts and "text" in parts[0]:
+                    text = parts[0]["text"].strip()
+                    if len(text) > 10:
+                        return text
+        logger.warning(f"Gemini API status {resp.status_code}: {resp.text[:200]}")
+    except Exception as e:
+        logger.warning(f"Gemini API error: {e}")
+    return None
+
 def call_hf_llm(message: str, history: List[ChatMessage], hf_token: str) -> Optional[str]:
     """
     Call HuggingFace Inference API with proper ChatML prompt format.
@@ -199,8 +242,9 @@ def talk_to_saathi(req: ChatRequest):
     
     Pipeline:
     1. Crisis safety check (always runs first)
-    2. Attempt real LLM via HuggingFace Inference API (Mistral-7B)
-    3. Fallback to rich multi-turn rule-based engine if LLM unavailable
+    2. Attempt Gemini 1.5 Flash (if GEMINI_API_KEY is configured)
+    3. Attempt Mistral-7B via HF Inference API (if HF_TOKEN is configured)
+    4. Fallback to rich multi-turn rule-based engine
     """
     if not req.message.strip():
         raise HTTPException(
@@ -233,13 +277,17 @@ def talk_to_saathi(req: ChatRequest):
             )
         )
 
-    # ── Step 2: Try Real LLM via HuggingFace ─────────────────────────────────
-    # FIX: was reading HF_API_TOKEN (wrong). settings has HF_TOKEN.
-    hf_token = settings.HF_TOKEN or os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
-
+    # ── Step 2: Try Gemini API first if configured ───────────────────────────
+    gemini_key = getattr(settings, 'GEMINI_API_KEY', None) or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     llm_reply = None
-    if hf_token:
-        llm_reply = call_hf_llm(req.message, history, hf_token)
+    if gemini_key:
+        llm_reply = call_gemini_llm(req.message, history, gemini_key)
+
+    # ── Step 3: Try HuggingFace if Gemini not available or failed ────────────
+    if not llm_reply:
+        hf_token = settings.HF_TOKEN or os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
+        if hf_token:
+            llm_reply = call_hf_llm(req.message, history, hf_token)
 
     # ── Step 3: Fallback to rich rule-based engine ────────────────────────────
     final_reply = llm_reply if llm_reply else get_fallback_reply(topic, turn_count)

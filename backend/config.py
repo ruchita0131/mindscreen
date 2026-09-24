@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     MODEL_PATH: str = "./ml/checkpoints/best_model.pt"
     TOKENIZER_NAME: str = "mental/mental-roberta-base"
     HF_TOKEN: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
 
     ENVIRONMENT: str = "development"
     DEBUG: bool = False

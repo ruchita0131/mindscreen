@@ -9,278 +9,235 @@ export default function Landing() {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
 
-  // Casa Di Solare Scroll Animations:
-  // As user scrolls Y (0 -> 450px):
-  // 1. Giant Editorial Title ("MindScreen") smoothly expands into view in high-fashion serif font
-  // 2. Scroll-to-discover pill prompt at bottom fades out
-  const titleOpacity = useTransform(scrollY, [50, 350], [0.4, 1]);
-  const titleScale   = useTransform(scrollY, [50, 450], [0.88, 1.05]);
-  const titleY       = useTransform(scrollY, [50, 450], [40, -10]);
-  
-  const scrollPromptOpacity = useTransform(scrollY, [0, 150], [1, 0]);
+  // Scroll animations for editorial hero
+  const titleOpacity = useTransform(scrollY, [30, 280], [0.5, 1]);
+  const titleScale   = useTransform(scrollY, [30, 360], [0.92, 1.02]);
+  const titleY       = useTransform(scrollY, [30, 360], [30, -5]);
+  const scrollPromptOpacity = useTransform(scrollY, [0, 120], [1, 0]);
 
   return (
-    <div className="min-h-screen bg-[#1B1622] text-[#E8B4B8] overflow-x-hidden relative font-sans">
-      {/* Casa Di Solare Golden Celestial Sphere Background (Untouched) */}
+    <div className="min-h-screen bg-[#1B1622] text-[#E8B4B8] overflow-x-hidden relative font-sans selection:bg-[#81B29A]/30 selection:text-[#FFE8C2]">
+      {/* Golden Celestial Ambient Background */}
       <SereneMoonBackground />
 
-      {/* ── CASA DI SOLARE STYLE NAVBAR ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-nav px-6 sm:px-12 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-9 h-9 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 flex items-center justify-center">
-              <Brain className="w-4 h-4 text-[#94D2BD]" />
-            </div>
-            <span className="font-serif-title text-2xl font-bold tracking-widest text-[#94D2BD] uppercase">
-              MindScreen
-            </span>
+      {/* ── MINIMAL EDITORIAL NAVBAR ── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-nav px-6 sm:px-12 py-4 flex items-center justify-between">
+        <div 
+          className="flex items-center gap-3 cursor-pointer group" 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          <div className="w-8 h-8 rounded-full bg-[#81B29A]/15 border border-[#81B29A]/30 flex items-center justify-center transition-transform group-hover:scale-105">
+            <Brain className="w-4 h-4 text-[#94D2BD]" />
           </div>
-
-          <div className="hidden md:flex items-center gap-6 text-xs font-semibold text-[#E8B4B8]/80 uppercase tracking-widest">
-            <span className="text-[#94D2BD] font-bold cursor-pointer">● Intro</span>
-            <span className="hover:text-[#94D2BD] cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })}>Assessment</span>
-            <span className="hover:text-[#94D2BD] cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 1200, behavior: 'smooth' })}>MentalBERT</span>
-            <span className="hover:text-[#94D2BD] cursor-pointer transition-colors" onClick={() => window.scrollTo({ top: 1600, behavior: 'smooth' })}>Acoustics</span>
-          </div>
+          <span className="font-serif-title text-xl font-bold tracking-widest text-[#FFE8C2] uppercase">
+            MindScreen
+          </span>
         </div>
 
         <div className="flex items-center gap-4">
           <Button 
             onClick={() => navigate('/dashboard')}
-            className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-xs tracking-wider uppercase px-6 py-2.5 rounded-full shadow-[0_0_20px_rgba(129,178,154,0.35)] transition-all flex items-center gap-2"
+            className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-xs tracking-wider uppercase px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(129,178,154,0.3)] transition-all flex items-center gap-2"
           >
             Enter Sanctuary <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
       </nav>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-6">
-        {/* HERO SECTION — CASA DI SOLARE EDITORIAL SANCTUARY */}
-        <section className="min-h-screen flex flex-col justify-between pt-28 pb-16 relative">
+      <main className="relative z-10 max-w-6xl mx-auto px-6">
+        {/* ── HERO SECTION: TIMELESS & REFINED ── */}
+        <section className="min-h-screen flex flex-col justify-between pt-24 pb-12 relative">
           
-          {/* Top Intro Subtitle Badge */}
+          {/* Subtle Tagline */}
           <div className="text-center pt-8 z-20">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#241D2B]/90 border border-[#81B29A]/30 backdrop-blur-md shadow-lg">
-              <Sparkles className="w-3.5 h-3.5 text-[#94D2BD] animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#241D2B]/80 border border-[#81B29A]/25 backdrop-blur-md">
+              <Sparkles className="w-3 h-3 text-[#94D2BD]" />
               <span className="text-[11px] font-semibold tracking-widest text-[#94D2BD] uppercase">
-                AI-Powered Multimodal Mental Health Screening
+                Multimodal Mental Health Screening
               </span>
             </div>
           </div>
 
-          {/* DYNAMIC EDITORIAL HEADING ("MindScreen") — FLOATS IN 3D SANCTUARY SPACE WITH HIGH CONTRAST */}
+          {/* Editorial Title Card */}
           <motion.div
             style={{
               opacity: titleOpacity,
               scale: titleScale,
               y: titleY,
             }}
-            className="text-center my-auto z-20 py-6"
+            className="text-center my-auto z-20 py-4"
           >
-            <div className="max-w-2xl mx-auto p-8 sm:p-12 rounded-[2.5rem] bg-[#1B1622]/88 border border-[#81B29A]/35 backdrop-blur-2xl shadow-[0_25px_60px_rgba(0,0,0,0.75)]">
-              <h1 className="font-serif-title text-6xl sm:text-8xl md:text-9xl italic font-semibold tracking-tight leading-[0.88] mb-6 text-[#FFE8C2] drop-shadow-[0_4px_20px_rgba(0,0,0,0.9)]">
+            <div className="max-w-2xl mx-auto p-8 sm:p-12 rounded-[2rem] bg-[#1B1622]/85 border border-[#81B29A]/30 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.65)]">
+              <h1 className="font-serif-title text-6xl sm:text-7xl md:text-8xl italic font-semibold tracking-tight leading-[0.92] mb-4 text-[#FFE8C2]">
                 MindScreen
               </h1>
               
-              <p className="text-base sm:text-xl text-[#F0C0C6] font-medium leading-relaxed mb-8 px-2">
-                A serene clinical screening sanctuary integrating PHQ-9 metrics, MentalBERT semantics, and voice acoustics.
+              <p className="text-sm sm:text-base text-[#F0C0C6] font-medium leading-relaxed mb-7 max-w-lg mx-auto">
+                A quiet screening sanctuary integrating standardized PHQ-9 metrics, MentalBERT semantics, and voice acoustic biomarkers.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="flex items-center justify-center">
                 <Button 
                   onClick={() => navigate('/dashboard')}
-                  className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm px-8 py-4 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.45)] transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm px-8 py-3.5 rounded-full shadow-[0_0_25px_rgba(129,178,154,0.4)] transition-all flex items-center justify-center gap-2"
                 >
-                  Start Assessment <ArrowRight className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => window.scrollTo({ top: 900, behavior: 'smooth' })}
-                  className="border-[#E8B4B8]/40 text-[#E8B4B8] hover:bg-[#81B29A]/15 hover:text-[#94D2BD] text-sm px-8 py-4 rounded-full transition-all backdrop-blur-md font-medium w-full sm:w-auto"
-                >
-                  Explore Methodology
+                  Begin Screening <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
           </motion.div>
 
-
-          {/* CASA DI SOLARE SCREENSHOT 1 SCROLL PROMPT PILL */}
+          {/* Gentle Scroll Cue */}
           <motion.div
             style={{ opacity: scrollPromptOpacity }}
-            className="text-center z-30 pt-6 pb-2 flex flex-col items-center justify-center"
+            className="text-center z-30 pb-2 flex flex-col items-center justify-center"
           >
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#241D2B]/95 border border-[#81B29A]/40 backdrop-blur-xl shadow-xl">
-              <span className="text-[11px] font-bold tracking-widest text-[#94D2BD] uppercase">
-                Scroll to discover
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#241D2B]/80 border border-[#81B29A]/30 backdrop-blur-xl">
+              <span className="text-[10px] font-bold tracking-widest text-[#94D2BD] uppercase">
+                Explore The Sanctuary
               </span>
               <motion.div
-                animate={{ y: [0, 4, 0] }}
+                animate={{ y: [0, 3, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-2 h-2 rounded-full bg-[#81B29A]"
+                className="w-1.5 h-1.5 rounded-full bg-[#81B29A]"
               />
             </div>
           </motion.div>
-
         </section>
 
-        {/* FEATURES SECTION — TRI-MODAL CLINICAL APPROACH */}
-        <section className="py-28 relative z-20">
-          <div className="text-center mb-20">
-            <span className="text-xs uppercase tracking-widest text-[#94D2BD] font-bold mb-3 block">
-              Tri-Modal Architecture
-            </span>
-            <h2 className="font-serif-title text-4xl sm:text-6xl italic font-normal tracking-tight mb-4 text-[#94D2BD]">
-              A Holistic Tri-Modal Approach
+        {/* ── TRI-MODAL METHODOLOGY: CLEAN 3-COLUMN CARDS ── */}
+        <section className="py-16 relative z-20">
+          <div className="text-center mb-14">
+            <h2 className="font-serif-title text-3xl sm:text-5xl italic font-normal tracking-tight mb-3 text-[#FFE8C2]">
+              A Calibrated Tri-Modal Pipeline
             </h2>
-            <p className="text-[#E8B4B8] max-w-2xl mx-auto text-base font-medium leading-relaxed">
-              Clinical-grade desaturated analysis combining subjective self-reports, semantic text processing, and vocal biomarkers.
+            <p className="text-[#E8B4B8]/90 max-w-xl mx-auto text-sm font-medium leading-relaxed">
+              Combining standardized self-reports, contextual language patterns, and vocal biomarkers for clinical-grade insight.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: ClipboardList,
-                title: 'PHQ-9 Questionnaire',
-                tag: 'Clinical Standard',
-                desc: 'Standardized 9-question depression severity metric validated by healthcare practitioners globally.',
-                color: 'text-[#94D2BD]',
-                bg: 'bg-emerald-500/15',
-                border: 'border-emerald-500/30'
+                title: 'Clinical PHQ-9',
+                weight: '20% Weight',
+                desc: 'Standardized 9-question depression severity metric calibrated to international diagnostic criteria.',
               },
               {
                 icon: Brain,
                 title: 'MentalBERT NLP',
-                tag: 'Semantic Analysis',
-                desc: 'Specialized transformer model fine-tuned on clinical domain text for subtle cognitive state extraction.',
-                color: 'text-[#94D2BD]',
-                bg: 'bg-emerald-500/15',
-                border: 'border-emerald-500/30'
+                weight: '50% Weight',
+                desc: 'Domain-adapted transformer analyzing semantic sentiment, cognitive distortions, and journal reflections.',
               },
               {
                 icon: Mic,
-                title: 'Voice Acoustic Analysis',
-                desc: 'Extracts pitch variability, MFCCs, and spectral energy to identify acoustic indicators of distress.',
-                tag: 'Vocal Biomarkers',
-                color: 'text-[#E8B4B8]',
-                bg: 'bg-rose-500/15',
-                border: 'border-rose-500/30'
+                title: 'Vocal Acoustics',
+                weight: '30% Weight',
+                desc: 'Acoustic feature extraction isolating pitch variation, energy contours, and MFCC biomarkers.',
               }
             ].map((feature, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.15 }}
+                transition={{ duration: 0.5, delay: i * 0.12 }}
                 viewport={{ once: true }}
-                className="glass-card p-8 hover:-translate-y-2 transition-transform duration-300 relative group overflow-hidden"
+                className="glass-card p-7 hover:-translate-y-1.5 transition-all duration-300 relative group border-[#81B29A]/20 hover:border-[#81B29A]/45"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className={`w-12 h-12 rounded-2xl ${feature.bg} border ${feature.border} flex items-center justify-center`}>
-                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                <div className="flex items-center justify-between mb-5">
+                  <div className="w-11 h-11 rounded-xl bg-[#81B29A]/15 border border-[#81B29A]/30 flex items-center justify-center">
+                    <feature.icon className="w-5 h-5 text-[#94D2BD]" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-widest text-[#94D2BD] font-bold px-3 py-1 rounded-full bg-[#81B29A]/15 border border-[#81B29A]/30">
-                    {feature.tag}
+                  <span className="text-[10px] uppercase tracking-wider text-[#94D2BD] font-semibold px-2.5 py-1 rounded-full bg-[#81B29A]/10 border border-[#81B29A]/20">
+                    {feature.weight}
                   </span>
                 </div>
-                <h3 className="font-serif-title text-3xl font-semibold mb-3 text-[#94D2BD]">{feature.title}</h3>
-                <p className="text-[#F0C0C6] text-sm leading-relaxed font-medium">{feature.desc}</p>
+                <h3 className="font-serif-title text-2xl font-semibold mb-2 text-[#FFE8C2]">{feature.title}</h3>
+                <p className="text-[#F0C0C6]/90 text-xs sm:text-sm leading-relaxed">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
         </section>
 
-        {/* SAATHI — YOUR WELLBEING COMPANION SHOWCASE */}
-        <section className="py-20 relative z-20">
-          <div className="glass-card p-8 sm:p-14 border-[#81B29A]/30 relative overflow-hidden bg-gradient-to-br from-[#241D2B] via-[#1B1622] to-[#2E2032]">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        {/* ── SAATHI WELLBEING COMPANION SHOWCASE (REFINED PALETTE) ── */}
+        <section className="py-14 relative z-20">
+          <div className="glass-card p-8 sm:p-12 border-[#81B29A]/30 relative overflow-hidden bg-gradient-to-br from-[#241D2B] via-[#1B1622] to-[#251A2A]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
               
-              {/* Left Column: Interactive Chat Cards Preview */}
-              <div className="lg:col-span-7 space-y-4 relative">
+              {/* Left Column: Native Twilight Chat Cards Preview */}
+              <div className="lg:col-span-6 space-y-3.5">
                 
                 {/* User Message Bubble */}
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -15 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.4 }}
                   viewport={{ once: true }}
-                  className="p-4 sm:p-5 rounded-2xl bg-white text-slate-900 shadow-xl max-w-md space-y-1 border border-white/20"
+                  className="p-4 rounded-2xl bg-[#81B29A] text-slate-950 shadow-lg max-w-sm ml-auto space-y-1"
                 >
-                  <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                    <span>You</span>
-                  </div>
-                  <p className="text-sm font-medium leading-relaxed">
-                    I get so stressed talking to my parents. It always ends with us arguing.
+                  <p className="text-xs font-bold text-slate-900/70">You</p>
+                  <p className="text-xs sm:text-sm font-semibold leading-relaxed">
+                    I get so stressed talking to my family. It always ends in an argument.
                   </p>
                 </motion.div>
 
                 {/* Saathi Companion Message Bubble */}
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -15 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
+                  transition={{ duration: 0.4, delay: 0.15 }}
                   viewport={{ once: true }}
-                  className="p-4 sm:p-5 rounded-2xl bg-white text-slate-900 shadow-xl max-w-md space-y-1 border border-white/20 ml-4 sm:ml-8"
+                  className="p-4 rounded-2xl bg-[#1B1622] border border-[#81B29A]/30 shadow-lg max-w-sm space-y-1.5"
                 >
-                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Saathi 🌿</span>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#94D2BD]">
+                    <span>🌿 Saathi</span>
                   </div>
-                  <p className="text-sm font-medium leading-relaxed">
-                    Namaste 🌿 It's so tough when family doesn't see where you're coming from. Take a gentle breath with me. Let's try this grounding exercise.
+                  <p className="text-xs sm:text-sm text-[#F0C0C6] leading-relaxed">
+                    It's so tough when the people closest to us don't seem to understand. Setting gentle emotional boundaries is a quiet act of self-care.
                   </p>
                 </motion.div>
 
-                {/* Embedded Recommendation Card */}
+                {/* Grounding Exercise Card */}
                 <motion.div
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
                   viewport={{ once: true }}
-                  className="p-4 rounded-2xl bg-[#1B1622] border-2 border-[#81B29A] shadow-2xl max-w-md ml-4 sm:ml-8 flex items-center justify-between gap-4"
+                  className="p-3.5 rounded-xl bg-[#241D2B] border border-[#81B29A]/35 shadow-md max-w-sm flex items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-[#81B29A]/20 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-[#94D2BD]" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#81B29A]/20 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-[#94D2BD]" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-[#FFE8C2]">Communicating with Care</h4>
-                      <p className="text-xs text-[#94D2BD]">Guided Breathwork Pause (5 min)</p>
+                      <h4 className="text-xs font-bold text-[#FFE8C2]">Pranayama 4-7-8 Release</h4>
+                      <p className="text-[10px] text-[#94D2BD]">Calming Breathwork • 4 min</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => navigate('/dashboard')}
-                    className="w-10 h-10 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold flex items-center justify-center shadow-lg transition-transform hover:scale-105"
-                  >
-                    ▶
-                  </button>
+                  <span className="text-[11px] text-[#FFE8C2] font-semibold px-2 py-1 rounded-md bg-[#81B29A]/20 border border-[#81B29A]/30">
+                    Integrated
+                  </span>
                 </motion.div>
-
-                {/* Floating Avatar */}
-                <div className="absolute -bottom-6 -left-4 w-16 h-16 rounded-full bg-gradient-to-tr from-[#3A4D3F] via-[#6E8B74] to-[#E3EBDC] flex items-center justify-center shadow-2xl border-2 border-white/40">
-                  <span className="text-xl">🌿</span>
-                </div>
               </div>
 
-              {/* Right Column: Title & Action */}
-              <div className="lg:col-span-5 space-y-6">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 text-[#94D2BD] text-xs font-bold uppercase tracking-widest">
-                  <span>Saathi • Your Wellbeing Companion</span>
+              {/* Right Column: Copy & Action */}
+              <div className="lg:col-span-6 space-y-4 lg:pl-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#81B29A]/15 border border-[#81B29A]/30 text-[#94D2BD] text-[11px] font-semibold uppercase tracking-wider">
+                  <span>Always-There Companion</span>
                 </div>
-                <h3 className="font-serif-title text-4xl sm:text-5xl italic font-normal tracking-tight text-[#94D2BD] leading-tight">
-                  Always-there empathetic support
+                <h3 className="font-serif-title text-3xl sm:text-4xl italic font-normal tracking-tight text-[#FFE8C2] leading-tight">
+                  Meet Saathi, Your Wellbeing Companion
                 </h3>
-                <p className="text-[#E8B4B8] text-base font-medium leading-relaxed">
-                  Unpack what’s on your mind with Saathi, your true wellbeing companion. Gain perspective on daily stressors, family expectations, and exam pressure with gentle, reflective grounding recommendations.
+                <p className="text-[#E8B4B8]/90 text-sm leading-relaxed">
+                  Reflect on daily stressors, academic pressure, and unspoken thoughts with compassionate conversational guidance and instant grounding exercises.
                 </p>
-                <div>
+                <div className="pt-1">
                   <Button 
                     onClick={() => navigate('/dashboard')}
-                    className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-sm px-8 py-4 rounded-full shadow-[0_0_30px_rgba(129,178,154,0.4)] transition-all inline-flex items-center gap-2"
+                    className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full shadow-[0_0_20px_rgba(129,178,154,0.35)] transition-all inline-flex items-center gap-2"
                   >
-                    🌿 Talk to Saathi <ArrowRight className="w-4 h-4" />
+                    🌿 Talk with Saathi <ArrowRight className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </div>
@@ -288,60 +245,26 @@ export default function Landing() {
             </div>
           </div>
         </section>
-
-
-
-        {/* HOW IT WORKS SECTION */}
-        <section className="py-20 mb-24 relative z-20">
-          <div className="glass-card p-10 sm:p-16 border-[#81B29A]/30 relative overflow-hidden">
-            <div className="text-center mb-16 relative z-10">
-              <h2 className="font-serif-title text-4xl sm:text-6xl italic font-normal tracking-tight mb-4 text-[#94D2BD]">
-                How MindScreen Works
-              </h2>
-              <p className="text-[#E8B4B8] max-w-2xl mx-auto text-base font-medium">
-                3 quiet, effortless steps to complete your screening session.
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative z-10">
-              {[
-                { step: '01', title: 'Complete PHQ-9', desc: 'Select ratings for 9 clinical questions regarding your recent mood and energy levels.' },
-                { step: '02', title: 'Write Your Thoughts', desc: 'Express your feelings in a short journal response. MentalBERT analyzes semantic patterns.' },
-                { step: '03', title: 'Voice Check-In', desc: 'Speak naturally for 15-30 seconds. Audio feature extraction measures acoustic stability.' }
-              ].map((item, i) => (
-                <div key={i} className="relative">
-                  {i < 2 && <div className="hidden md:block absolute top-10 left-[65%] w-full h-[1px] bg-gradient-to-r from-[#81B29A]/40 to-transparent" />}
-                  <div className="font-serif-title text-5xl font-italic text-[#94D2BD]/40 mb-3">{item.step}</div>
-                  <h3 className="text-xl font-bold mb-2 text-[#94D2BD]">{item.title}</h3>
-                  <p className="text-[#F0C0C6] text-sm leading-relaxed font-medium">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="border-t border-[#81B29A]/20 bg-[#17121C] relative z-20">
-        <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-            <div className="flex items-center gap-3">
-              <Brain className="text-[#94D2BD] w-5 h-5" />
-              <span className="font-serif-title text-2xl font-bold tracking-widest text-[#94D2BD]">MindScreen</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#81B29A]/15 border border-[#81B29A]/30 text-[#94D2BD] text-xs font-bold">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Privacy Preserving • Confidential Analysis</span>
-            </div>
+      {/* ── CLEAN, RESPECTFUL FOOTER ── */}
+      <footer className="border-t border-[#81B29A]/20 bg-[#16111B] relative z-20 py-8">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#E8B4B8]/70">
+          <div className="flex items-center gap-2.5">
+            <Brain className="text-[#94D2BD] w-4 h-4" />
+            <span className="font-serif-title text-base font-bold text-[#FFE8C2]">MindScreen</span>
+            <span className="text-white/20">|</span>
+            <span>Multimodal Clinical Screening</span>
           </div>
-          
-          <div className="text-center md:text-left text-xs text-[#E8B4B8]/80 border-t border-white/5 pt-8 leading-relaxed font-medium">
-            <p className="mb-2">
-              <strong className="text-[#94D2BD]">Clinical Disclaimer:</strong> MindScreen is an AI-assisted screening research platform intended solely for preliminary wellness assessment. It is not a diagnostic tool and does not constitute medical advice.
-            </p>
-            <p>If you or someone you know is in crisis, please contact local emergency services or call a mental health crisis line immediately.</p>
-            <p className="mt-6 text-[#E8B4B8]/60">© {new Date().getFullYear()} MindScreen Platform (RVITM BCS685). All rights reserved.</p>
+
+          <div className="flex items-center gap-2 text-[#94D2BD]">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Confidential & Research Guided</span>
           </div>
+
+          <p className="text-[#E8B4B8]/50 text-[11px]">
+            © {new Date().getFullYear()} MindScreen (RVITM BCS685)
+          </p>
         </div>
       </footer>
     </div>
