@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Sparkles, Heart, Wind, RefreshCw, MessageSquare, Play } from 'lucide-react';
+import { X, Send, Wind, RefreshCw, Play, AlertTriangle, Phone } from 'lucide-react';
 import { apiClient } from '../../api/client';
 import { GuidedBreathingModal } from '../tools/GuidedBreathingModal';
 
@@ -24,6 +24,13 @@ interface SaathiDrawerProps {
   onClose: () => void;
 }
 
+const QUICK_PROMPTS = [
+  "I feel so stressed talking to my family.",
+  "Exam pressure is getting too much.",
+  "My mind won't stop at night.",
+  "I just need someone to talk to.",
+];
+
 export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -31,49 +38,55 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
       sender: 'saathi',
       content: "Namaste 🌿 I'm Saathi.\nI'm here to listen, help you reflect, or simply sit with you for a while.\n\nWhat's on your mind today?",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }
+    },
   ]);
 
-  const [inputMsg, setInputMsg] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showBreathingModal, setShowBreathingModal] = useState(false);
+  const [inputMsg, setInputMsg]           = useState('');
+  const [isLoading, setIsLoading]         = useState(false);
+  const [showBreathing, setShowBreathing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-scroll on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
+  // Focus input when drawer opens
   useEffect(() => {
     if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => inputRef.current?.focus(), 350);
     }
-  }, [isOpen, messages, isLoading]);
+  }, [isOpen]);
 
-  const quickPrompts = [
-    "I get so stressed talking to my family.",
-    "Feeling overwhelmed by exam pressure & future expectation.",
-    "My mind is racing and I can't fall asleep.",
-    "I need a quiet moment to breathe and reset.",
-  ];
-
-  const handleSendMessage = async (textToSend?: string) => {
-    const query = textToSend || inputMsg;
-    if (!query.trim() || isLoading) return;
+  const sendMessage = async (text: string, currentMessages: ChatMessage[]) => {
+    if (!text.trim() || isLoading) return;
 
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
-      content: query,
+      content: text.trim(),
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputMsg('');
+    const updatedMessages = [...currentMessages, userMsg];
+    setMessages(updatedMessages);
+    setInputMsg('');
     setIsLoading(true);
 
     try {
+      // Send history WITHOUT the current message (backend appends it)
+      const historyPayload = currentMessages.map((m) => ({
+        sender: m.sender,
+        content: m.content,
+      }));
+
       const res = await apiClient.post('/api/chat/companion', {
-        message: query,
-        history: messages.map((m) => ({ sender: m.sender, content: m.content })),
+        message: text.trim(),
+        history: historyPayload,
       });
 
-      const saathiReply: ChatMessage = {
+      const saathiMsg: ChatMessage = {
         id: `saathi-${Date.now()}`,
         sender: 'saathi',
         content: res.data.reply,
@@ -83,176 +96,228 @@ export const SaathiDrawer: React.FC<SaathiDrawerProps> = ({ isOpen, onClose }) =
         helpline_info: res.data.helpline_info,
       };
 
-      setMessages((prev) => [...prev, saathiReply]);
-    } catch (err) {
-      console.error("Saathi error:", err);
-      const fallbackMsg: ChatMessage = {
-        id: `saathi-fb-${Date.now()}`,
+      setMessages((prev) => [...prev, saathiMsg]);
+    } catch (err: any) {
+      console.error('Saathi API error:', err);
+      const errMsg: ChatMessage = {
+        id: `saathi-err-${Date.now()}`,
         sender: 'saathi',
-        content: "I'm right here with you. Take a gentle breath. You don't have to carry everything all at once.",
+        content:
+          "I'm right here with you. Take a gentle breath — you don't have to carry everything at once. Could you try sharing that again?",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         recommended_activity: {
-          title: "Guided Calm Breathwork",
-          category: "Relaxation",
-          duration: "4 min",
-          action_type: "breathing"
-        }
+          title: 'Guided Calm Breathwork',
+          category: 'Relaxation',
+          duration: '4 min',
+          action_type: 'breathing',
+        },
       };
-      setMessages((prev) => [...prev, fallbackMsg]);
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage(inputMsg, messages);
+  };
+
+  const handleQuickPrompt = (prompt: string) => {
+    if (isLoading) return;
+    sendMessage(prompt, messages);
   };
 
   return (
     <>
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-[9999] pointer-events-auto flex justify-end">
-            
-            {/* Backdrop Blur */}
+          <div className="fixed inset-0 z-[9999] flex justify-end pointer-events-auto">
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={onClose}
-              className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs"
+              className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
             />
 
-            {/* Sliding Drawer Content (Twilight Theme) */}
+            {/* Drawer Panel */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-              className="relative w-full max-w-md bg-[#1B1622] text-[#E6E2EB] h-full shadow-2xl flex flex-col justify-between z-10 border-l border-[#81B29A]/30"
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="relative w-full max-w-md bg-[#1B1622] flex flex-col h-full shadow-2xl z-10 border-l border-[#81B29A]/25"
             >
-              
-              {/* Drawer Header */}
-              <div className="p-5 bg-[#241D2B] border-b border-[#81B29A]/20 flex items-center justify-between">
+              {/* ── Header ── */}
+              <div className="px-5 py-4 bg-[#241D2B] border-b border-[#81B29A]/20 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 flex items-center justify-center text-[#94D2BD] shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-[#81B29A]/20 border border-[#81B29A]/40 flex items-center justify-center">
                     <span className="text-lg">🌿</span>
                   </div>
                   <div>
-                    <h2 className="font-serif-title text-lg font-bold text-[#FFE8C2] leading-tight">
-                      Saathi
-                    </h2>
-                    <p className="text-xs text-[#94D2BD] font-medium">Your wellbeing companion</p>
+                    <h2 className="text-base font-bold text-[#FFE8C2] leading-none">Saathi</h2>
+                    <p className="text-xs text-[#94D2BD] mt-0.5">Your wellbeing companion</p>
                   </div>
                 </div>
-
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-[#FFE8C2] flex items-center justify-center transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                {/* Online indicator + close */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 text-[10px] text-[#94D2BD]">
+                    <span className="w-1.5 h-1.5 bg-[#94D2BD] rounded-full animate-pulse" />
+                    Online
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-[#FFE8C2] flex items-center justify-center transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              {/* Chat Thread */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {/* ── Message Thread ── */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
                 {messages.map((m) => (
                   <motion.div
                     key={m.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
                     className={`flex gap-2.5 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
+                    {/* Saathi avatar */}
                     {m.sender === 'saathi' && (
-                      <div className="w-7 h-7 rounded-full bg-[#81B29A] text-slate-950 flex items-center justify-center text-xs flex-shrink-0 mt-1 shadow-xs font-bold">
+                      <div className="w-7 h-7 rounded-full bg-[#81B29A] flex items-center justify-center text-xs flex-shrink-0 mt-1">
                         🌿
                       </div>
                     )}
 
-                    <div className={`max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed space-y-2 shadow-sm ${
-                      m.sender === 'user'
-                        ? 'bg-[#81B29A] text-slate-950 font-bold rounded-tr-xs'
-                        : 'bg-[#241D2B] text-[#F0C0C6] border border-[#81B29A]/30 rounded-tl-xs'
-                    }`}>
-                      <p className="whitespace-pre-line font-medium">{m.content}</p>
+                    <div className="max-w-[88%] space-y-2">
+                      {/* Bubble */}
+                      <div
+                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                          m.sender === 'user'
+                            ? 'bg-[#81B29A] text-slate-950 font-semibold rounded-tr-sm'
+                            : 'bg-[#241D2B] text-[#F0C0C6] border border-[#81B29A]/25 rounded-tl-sm'
+                        }`}
+                      >
+                        <p className="whitespace-pre-line">{m.content}</p>
+                      </div>
 
-                      {/* Recommended Activity Card */}
-                      {m.recommended_activity && (
-                        <div className="mt-3 p-3 rounded-xl bg-[#1B1622] border border-[#81B29A]/40 flex items-center justify-between gap-2 shadow-2xs">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-[#81B29A]/20 flex items-center justify-center text-[#94D2BD]">
+                      {/* Crisis Banner */}
+                      {m.crisis_flag && m.helpline_info && (
+                        <div className="rounded-xl bg-red-950/50 border border-red-500/40 p-3 space-y-2">
+                          <div className="flex items-center gap-1.5 text-red-300 text-xs font-bold">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            Immediate Support Available
+                          </div>
+                          {m.helpline_info.split(' | ').map((line, i) => (
+                            <div key={i} className="flex items-start gap-1.5 text-[11px] text-red-200">
+                              <Phone className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                              <span>{line}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Activity Card */}
+                      {m.recommended_activity && !m.crisis_flag && (
+                        <div className="rounded-xl bg-[#1B1622] border border-[#81B29A]/30 p-3 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-[#81B29A]/15 flex items-center justify-center text-[#94D2BD] flex-shrink-0">
                               <Wind className="w-3.5 h-3.5" />
                             </div>
                             <div>
-                              <p className="text-xs font-bold text-[#FFE8C2]">{m.recommended_activity.title}</p>
-                              <p className="text-[10px] text-[#94D2BD]">{m.recommended_activity.category} • {m.recommended_activity.duration}</p>
+                              <p className="text-xs font-bold text-[#FFE8C2] leading-tight">
+                                {m.recommended_activity.title}
+                              </p>
+                              <p className="text-[10px] text-[#94D2BD]">
+                                {m.recommended_activity.category} · {m.recommended_activity.duration}
+                              </p>
                             </div>
                           </div>
                           <button
-                            onClick={() => setShowBreathingModal(true)}
-                            className="px-2.5 py-1 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-[11px] flex items-center gap-1 transition-all"
+                            onClick={() => setShowBreathing(true)}
+                            className="px-2.5 py-1 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-[11px] flex items-center gap-1 transition-all flex-shrink-0"
                           >
-                            <Play className="w-2.5 h-2.5 fill-current" /> Start
+                            <Play className="w-2.5 h-2.5 fill-current" />
+                            Start
                           </button>
                         </div>
                       )}
 
-                      <div className={`text-[10px] text-right ${m.sender === 'user' ? 'text-slate-900/70' : 'text-[#94D2BD]/70'}`}>
+                      {/* Timestamp */}
+                      <p className={`text-[10px] ${m.sender === 'user' ? 'text-right text-slate-500' : 'text-[#94D2BD]/60'}`}>
                         {m.timestamp}
-                      </div>
+                      </p>
                     </div>
                   </motion.div>
                 ))}
 
+                {/* Typing indicator */}
                 {isLoading && (
-                  <div className="flex items-center gap-2 text-xs text-[#94D2BD] italic font-medium">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Saathi is thinking...</span>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2.5"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-[#81B29A] flex items-center justify-center text-xs flex-shrink-0">
+                      🌿
+                    </div>
+                    <div className="bg-[#241D2B] border border-[#81B29A]/25 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
+                      <RefreshCw className="w-3.5 h-3.5 text-[#94D2BD] animate-spin" />
+                      <span className="text-xs text-[#94D2BD] italic">Saathi is thinking...</span>
+                    </div>
+                  </motion.div>
                 )}
 
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Prompts */}
-              <div className="px-4 py-2.5 border-t border-[#81B29A]/20 bg-[#241D2B]/80 flex gap-2 overflow-x-auto no-scrollbar">
-                {quickPrompts.map((qp, i) => (
+              {/* ── Quick Prompts ── */}
+              <div className="px-4 py-2.5 border-t border-[#81B29A]/15 bg-[#241D2B]/60 flex gap-2 overflow-x-auto">
+                {QUICK_PROMPTS.map((qp, i) => (
                   <button
                     key={i}
-                    onClick={() => handleSendMessage(qp)}
-                    className="px-3 py-1.5 rounded-full bg-[#1B1622] border border-[#81B29A]/30 hover:border-[#81B29A] text-[11px] font-semibold text-[#94D2BD] whitespace-nowrap transition-all shadow-2xs"
+                    onClick={() => handleQuickPrompt(qp)}
+                    disabled={isLoading}
+                    className="px-3 py-1.5 rounded-full bg-[#1B1622] border border-[#81B29A]/30 hover:border-[#81B29A]/60 disabled:opacity-40 text-[11px] font-semibold text-[#94D2BD] whitespace-nowrap transition-all flex-shrink-0"
                   >
-                    🌿 {qp.length > 28 ? qp.substring(0, 28) + '...' : qp}
+                    🌿 {qp.length > 26 ? qp.slice(0, 26) + '…' : qp}
                   </button>
                 ))}
               </div>
 
-              {/* Input Bar */}
+              {/* ── Input Bar ── */}
               <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendMessage();
-                }}
-                className="p-4 bg-[#1B1622] border-t border-[#81B29A]/20 flex items-center gap-2"
+                onSubmit={handleSubmit}
+                className="p-4 bg-[#1B1622] border-t border-[#81B29A]/20 flex items-center gap-2 flex-shrink-0"
               >
                 <input
+                  ref={inputRef}
                   type="text"
                   value={inputMsg}
                   onChange={(e) => setInputMsg(e.target.value)}
                   placeholder="Talk to Saathi..."
-                  className="flex-1 bg-[#241D2B] border border-[#81B29A]/30 focus:border-[#94D2BD] rounded-full px-4 py-2.5 text-xs text-[#FFE8C2] placeholder-[#F0C0C6]/60 focus:outline-none transition-all"
+                  disabled={isLoading}
+                  className="flex-1 bg-[#241D2B] border border-[#81B29A]/30 focus:border-[#94D2BD] rounded-full px-4 py-2.5 text-sm text-[#FFE8C2] placeholder-[#F0C0C6]/50 focus:outline-none transition-all disabled:opacity-60"
                 />
                 <button
                   type="submit"
                   disabled={!inputMsg.trim() || isLoading}
-                  className="w-10 h-10 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] disabled:opacity-40 text-slate-950 font-bold flex items-center justify-center transition-all flex-shrink-0 shadow-sm"
+                  className="w-10 h-10 rounded-full bg-[#81B29A] hover:bg-[#94D2BD] disabled:opacity-40 text-slate-950 flex items-center justify-center transition-all flex-shrink-0"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </form>
             </motion.div>
-
           </div>
         )}
       </AnimatePresence>
 
-      <GuidedBreathingModal isOpen={showBreathingModal} onClose={() => setShowBreathingModal(false)} />
+      {/* Breathing Modal — rendered via portal to document.body */}
+      <GuidedBreathingModal isOpen={showBreathing} onClose={() => setShowBreathing(false)} />
     </>
   );
 };

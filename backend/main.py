@@ -7,7 +7,7 @@ from slowapi.errors import RateLimitExceeded
 from config import settings
 from database import engine, Base
 from middleware.rate_limit import limiter
-from routers import auth, predict, phq, mood, health
+from routers import auth, predict, phq, mood, health, chat
 
 # Create tables in the database
 Base.metadata.create_all(bind=engine)
