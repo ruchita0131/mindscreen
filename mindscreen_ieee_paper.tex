@@ -12,6 +12,7 @@
 \usepackage{multirow}
 \usepackage{url}
 \usepackage{microtype}
+\usepackage{balance}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -86,7 +87,7 @@ Table \ref{tab:taxonomy} compares MindScreen against representative state-of-the
 \textbf{System / Framework} & \textbf{Year} & \textbf{Modalities} & \textbf{Fusion Strategy} & \textbf{Safety Override} & \textbf{Key Limitation / Focus} \\ \midrule
 Woebot (Fitzpatrick et al.) \cite{fitzpatrick2017} & 2017 & Text Only & None (Rule/NLP) & Static Prompts & No acoustic signal; isolated text chat. \\
 SimSensei (DeVault et al.) \cite{devault2014} & 2014 & Video+Audio+Text & Early Feature Concatenation & No & Heavy lab setup; vulnerable to missing channels. \\
-DepAudioNet (Ma et al.) \cite{cummins2015} & 2016 & Audio Only & None (CNN-LSTM) & No & High acoustic sensitivity; lacks clinical grounding. \\
+Speech Survey (Cummins et al.) \cite{cummins2015} & 2015 & Audio Only & None (Clinical Review) & No & High acoustic sensitivity; lacks clinical grounding. \\
 MentalBERT (Ji et al.) \cite{ji2022} & 2022 & Text Only & None (Transformer) & No & High linguistic sensitivity; lacks safety bounds. \\
 AVEC Benchmark \cite{ringeval2019} & 2019 & Audio+Video+Text & Early / Mid Fusion & No & Research benchmark; lacks production architecture. \\
 \textbf{MindScreen (Proposed)} & \textbf{2026} & \textbf{PHQ-9+Text+Audio} & \textbf{Decision-Level Late} & \textbf{Deterministic CSO} & \textbf{Tri-modal late fusion with safety overrides.} \\ \bottomrule
@@ -187,6 +188,20 @@ The preliminary predicted class $\hat{y}$ and confidence $c$ are determined by:
 \hat{y} = \arg\max_{k \in \mathcal{C}} p_k^F, \qquad c = \max_{k \in \mathcal{C}} p_k^F
 \end{equation}
 
+\subsubsection{Clinical Safety Override (CSO)}
+In medical AI systems, probabilistic smoothing must not override critical clinical danger signs. We formalize two non-linear safety bounds:
+\begin{enumerate}
+    \item \textbf{Total Score Severe Override}: If $S \ge 20$, the classification is deterministically forced to severe regardless of text or voice sentiment:
+    \begin{equation}
+    S \ge 20 \implies (\hat{y}, c) \leftarrow (\text{severe}, \max(0.90, c))
+    \end{equation}
+    \item \textbf{Acute Crisis Flag ($C_F$)}: If suicidal ideation is endorsed on PHQ-9 Question 9 ($q_9 > 0$) or in free text, emergency triage is enforced:
+    \begin{equation}
+    C_F = (S \ge 20) \lor (q_9 > 0) \lor (\hat{y} == \text{severe}) \lor \text{CrisisTokens}(T)
+    \end{equation}
+\end{enumerate}
+Algorithm \ref{alg:fusion} outlines the complete decision-fusion pipeline.
+
 \begin{algorithm}[t]
 \caption{Tri-Modal Decision Fusion with Clinical Safety Override}
 \label{alg:fusion}
@@ -213,20 +228,6 @@ The preliminary predicted class $\hat{y}$ and confidence $c$ are determined by:
 \RETURN $\hat{y}, c, \mathbf{p}^F, C_F$
 \end{algorithmic}
 \end{algorithm}
-
-\subsubsection{Clinical Safety Override (CSO)}
-In medical AI systems, probabilistic smoothing must not override critical clinical danger signs. We formalize two non-linear safety bounds:
-\begin{enumerate}
-    \item \textbf{Total Score Severe Override}: If $S \ge 20$, the classification is deterministically forced to severe regardless of text or voice sentiment:
-    \begin{equation}
-    S \ge 20 \implies (\hat{y}, c) \leftarrow (\text{severe}, \max(0.90, c))
-    \end{equation}
-    \item \textbf{Acute Crisis Flag ($C_F$)}: If suicidal ideation is endorsed on PHQ-9 Question 9 ($q_9 > 0$) or in free text, emergency triage is enforced:
-    \begin{equation}
-    C_F = (S \ge 20) \lor (q_9 > 0) \lor (\hat{y} == \text{severe}) \lor \text{CrisisTokens}(T)
-    \end{equation}
-\end{enumerate}
-Algorithm \ref{alg:fusion} provides the complete execution logic.
 
 \subsection{Saathi: Conversational Agent and Tele-MANAS Triage}
 MindScreen incorporates \textbf{Saathi}, an empathetic companion designed for ongoing emotional reflection. Saathi operates through a hierarchical four-tier conversational state machine:
@@ -325,6 +326,7 @@ In compliance with digital healthcare data governance frameworks (e.g., HIPAA pr
     \item \textbf{Explainable Clinical Attribution}: Rather than producing an opaque score, the system extracts the most influential lexical tokens via a keyword attribution layer, giving clinicians clear visibility into what language patterns contributed to the text risk score.
 \end{itemize}
 
+\balance
 \section{Conclusion and Future Work}
 This paper presented \textbf{MindScreen}, a tri-modal decision-level late-fusion architecture for depression screening and conversational triage. By integrating validated PHQ-9 self-reports, transformer-based emotional semantics, and vocal speech dynamics, MindScreen achieves a 27.5\% reduction in decision entropy over unimodal methods. The deterministic Clinical Safety Override (CSO) guarantees that acute suicidality indicators cannot be diluted by statistical averaging. Furthermore, the integration of Saathi establishes a culturally responsive conversational companion with direct crisis dispatch to national tele-health services.
 
