@@ -276,9 +276,20 @@ A heuristic mapping $\Gamma: \mathcal{E} \to \{0,1,2,3\}$ translates the
   \label{eq:emotion_map}
 \end{equation}
 If affirmative crisis intent is detected in $T$ via windowed negation
-and scope resolution (evaluating triggers such as ``suicide'', ``kill myself'',
-``hopeless'', while suppressing negated expressions such as ``do not want to die''
-and third-party media references), the index is escalated: $\Gamma(e^*) \leftarrow 3$.
+and scope resolution, the index is escalated: $\Gamma(e^*) \leftarrow 3$.
+The scope-resolution filter monitors two lexical tiers:
+(i)~explicit multi-word suicidal expressions (e.g., ``kill myself'', ``end my life'',
+``want to die'', ``no reason to live'', ``commit suicide''), and
+(ii)~distress tokens (``suicide'', ``hopeless'', ``worthless'', ``self-harm'').
+For multi-word phrases, the preceding 30-character text window is evaluated for
+negation operators (e.g., ``not'', ``never'', ``no'', ``don't'', ``refuse to'',
+``would never'', ``no intention'').
+For single distress tokens, a symmetric window (3 tokens preceding and 2 tokens
+succeeding) is evaluated for negation operators and third-party attribution cues
+(e.g., ``friend'', ``roommate'', ``someone'', ``movie'', ``news'').
+Benign colloquial idioms (e.g., ``kill time'', ``killing it'', ``died laughing'')
+are matched against an exception list to suppress false alarms.
+Only affirmative, self-directed crisis expressions escalate the screening index.
 The score vector $\mathbf{p}^T$ is then formed by assigning $s$ to the
 predicted class and $0.10$ to each remaining class, followed by
 $\ell_1$ normalization.
@@ -295,11 +306,15 @@ To bypass the memory constraints of hosting heavy acoustic libraries
 (such as PyTorch and Librosa exceeding 512~MB RAM) on cloud containers,
 MindScreen offloads signal extraction to the client browser via the standard
 Web Audio API.
-During voice input, an \texttt{AnalyserNode} computes six real-time acoustic
-descriptors over the time and frequency domains: mean RMS loudness
-($\text{RMS}_\mu$), RMS energy variability ($\text{RMS}_\sigma$), zero-crossing
-rate ($\text{ZCR}$), normalized spectral centroid ($S_C$), 85\% spectral rolloff
-($S_R$), and speaking-to-silence ratio ($R_{\text{speak}}$).
+During voice input, the browser captures audio via an \texttt{AudioContext}
+(native browser sampling at 44.1 or 48~kHz).
+An \texttt{AnalyserNode} with FFT size $N_{\text{fft}} = 2048$ computes real-time
+frame spectra. Frames with RMS below a silence threshold of $0.02$ are classified
+as unvoiced silence.
+Across all active frames, six acoustic descriptors are accumulated:
+mean RMS loudness ($\text{RMS}_\mu$), RMS energy variability ($\text{RMS}_\sigma$),
+zero-crossing rate ($\text{ZCR}$), normalized spectral centroid ($S_C$),
+85\% spectral rolloff ($S_R$), and speaking-to-silence ratio ($R_{\text{speak}}$).
 The acoustic coefficients and threshold intervals were selected as engineering
 design parameters for prototype-level signal aggregation, rather than estimated
 through supervised learning. Their purpose is to provide a lightweight and
@@ -327,7 +342,18 @@ $\phi_6 = \min(|\text{ZCR} - 0.25|/0.25, 1)$ (deviation from typical voiced base
 weighted by design constants
 $\boldsymbol{\alpha} = [0.20, 0.20, 0.15, 0.15, 0.20, 0.10]^T$ ($\sum \alpha_j = 1$).
 The index $I_D$ is mapped to the 4-class score vector $\mathbf{p}^A$ via
-piecewise linear interpolation across manually specified threshold intervals.
+piecewise linear interpolation between boundary anchors:
+\begin{equation}
+  \mathbf{p}^A(I_D) = (1-t)\,\mathbf{a}_k + t\,\mathbf{a}_{k+1}, \quad t = \frac{I_D - l_k}{u_k - l_k},
+  \label{eq:audio_interp}
+\end{equation}
+evaluated across four intervals $[l_k, u_k)$: $[0.00, 0.25)$ ($k=0$),
+$[0.25, 0.45)$ ($k=1$), $[0.45, 0.65)$ ($k=2$), and $[0.65, 1.00]$ ($k=3$),
+with design anchors $\mathbf{a}_0 = [0.80, 0.15, 0.04, 0.01]^T$,
+$\mathbf{a}_1 = [0.50, 0.35, 0.12, 0.03]^T$,
+$\mathbf{a}_2 = [0.15, 0.55, 0.25, 0.05]^T$,
+$\mathbf{a}_3 = [0.05, 0.20, 0.60, 0.15]^T$, and
+$\mathbf{a}_4 = [0.02, 0.08, 0.35, 0.55]^T$, followed by $\ell_1$ normalization.
 If voice input is omitted by the user, a conservative prior vector
 $\mathbf{p}^A = [0.25, 0.45, 0.20, 0.10]^T$ is assigned.
 This distribution skews probability mass slightly toward the mild tier ($c_1$)
@@ -343,6 +369,13 @@ The three score vectors are combined as a convex sum:
   \label{eq:fusion}
 \end{equation}
 with weights $w_T = 0.50$, $w_A = 0.30$, $w_Q = 0.20$ ($\sum w_m = 1$).
+The selection of these weights is an engineering design choice grounded in the
+complementary characteristics of the three channels:
+(1)~the text channel ($w_T = 0.50$) carries direct linguistic expressions of affect,
+cognitive distortion, and acute intent, warranting primary weight;
+(2)~the audio channel ($w_A = 0.30$) captures real-time somatic, prosodic, and psychomotor markers
+(such as flat affect and hesitant speech); and
+(3)~the PHQ-9 channel ($w_Q = 0.20$) provides a retrospective two-week psychometric baseline.
 Because each $\mathbf{p}^m$ sums to one and the weights sum to one,
 $\mathbf{p}^F$ already lies on the simplex; normalization is retained
 defensively.
@@ -354,6 +387,11 @@ heuristic overconfidence:
   \label{eq:temperature}
 \end{equation}
 where $\epsilon = 10^{-7}$ provides numerical stability against underflow.
+The temperature parameter ($T = 1.20$) was selected to counteract heuristic probability saturation.
+Because individual branch vectors contain sharp heuristic peaks (e.g., $0.80$--$0.90$), direct convex
+combination can produce overly confident fused scores ($>0.85$) prior to safety verification.
+Setting $T = 1.20$ provides moderate entropy expansion, softening peaked probabilities into a
+smoother distribution without altering their ordinal ranking.
 We emphasize that this parameter ($T = 1.20$) represents an experimental
 heuristic score-softening transformation to attenuate extreme probabilities;
 it is not a statistically calibrated posterior probability obtained via
@@ -496,6 +534,29 @@ resources.
 LLM response safety and factuality have not been formally evaluated.
 Local template fallbacks maintain service continuity if external API quotas
 are exhausted.
+
+\subsection{Privacy, Consent, and Data Governance}
+\label{sec:privacy}
+
+Given the sensitive nature of psychological screening inputs, MindScreen implements
+four core data-governance principles:
+\begin{enumerate}
+  \item \textbf{Informed user consent}: Prior to initiating screening, users review
+    an explicit consent disclaimer stating that MindScreen is an engineering research
+    prototype, not a diagnostic or emergency medical device, and does not replace professional
+    consultation.
+  \item \textbf{Ephemeral client-side audio}: Raw vocal waveforms are captured and
+    processed entirely within the user's browser using the Web Audio API. Audio waveforms
+    are never recorded, cached on persistent storage, or transmitted across the network.
+    Only the 6-dimensional compact numerical vector $\mathbf{f}$ is sent to the server.
+  \item \textbf{External API privacy}: Free-text journal inputs sent to cloud inference
+    endpoints (Hugging Face and Google Gemini APIs) are transmitted over TLS without
+    Personally Identifiable Information (PII) or user account identifiers. Zero data
+    retention is requested under API terms.
+  \item \textbf{Offline data containment}: When operating in disconnected mode, local
+    rule-based and keyword fallbacks ensure complete operational continuity without any
+    outbound data egress.
+\end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Evaluation}
@@ -680,7 +741,7 @@ was not profiled and will be larger due to Python runtime overhead.
 \begin{tabular}{@{}lccc@{}}
 \toprule
 \textbf{Pipeline Component}
-  & \textbf{Mean (ms)} & \textbf{P95 (ms)} & \textbf{Mem.\ (MB)} \\
+  & \textbf{Mean (ms)} & \textbf{P95 (ms)} & \textbf{Heap (MB)}$^*$ \\
 \midrule
 PHQ-9 rule mapping             &   1.2 &    2.4 & $<$1   \\
 Acoustic feature scoring (local)&   8.4 &   14.2 & $<$12  \\
@@ -691,6 +752,8 @@ Saathi Companion (Gemini 2.5)$^\ddagger$ & 390.0 & 780.0 & Ext. \\
 \textbf{Local screening path}  &  \textbf{13.2} &  \textbf{22.7} & $<$\textbf{25} \\
 \textbf{Cloud screening path}  & \textbf{512.0} & \textbf{1150.0} & $<$\textbf{85} \\
 \bottomrule
+\multicolumn{4}{@{}l}{\footnotesize $^*$Memory values reflect peak Python heap allocations tracked via \texttt{tracemalloc};} \\
+\multicolumn{4}{@{}l}{\footnotesize \phantom{$^*$}total OS process Resident Set Size (RSS) was not measured.} \\
 \multicolumn{4}{@{}l}{\footnotesize $^\ddagger$Saathi is an interactive conversational module invoked post-screening;} \\
 \multicolumn{4}{@{}l}{\footnotesize \phantom{$^\ddagger$}it is not a sequential component of the 512~ms assessment pipeline.}
 \end{tabular}
