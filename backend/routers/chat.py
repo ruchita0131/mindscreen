@@ -200,8 +200,8 @@ def call_hf_llm(message: str, history: List[ChatMessage], hf_token: str) -> Opti
 
         messages_payload.append({"role": "user", "content": message})
 
-        # Use the Messages API (chat completions style) via HF serverless
-        url = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2/v1/chat/completions"
+        # Use the Messages API (chat completions style) via HF serverless router
+        url = "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.2/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {hf_token}",
             "Content-Type": "application/json",

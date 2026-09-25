@@ -7,7 +7,7 @@ import requests
 # mental/mental-roberta-base is a fill-mask model; we use j-hartmann/emotion
 # (distilroberta, <200MB on HF servers) and map emotions → depression risk.
 HF_API_URL = (
-    "https://api-inference.huggingface.co/models/"
+    "https://router.huggingface.co/hf-inference/models/"
     "j-hartmann/emotion-english-distilroberta-base"
 )
 
