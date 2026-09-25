@@ -82,6 +82,9 @@ def _score_from_features(f: dict) -> dict:
     # Low spectral centroid → muffled, flat voice quality
     brightness_score = 1.0 - spectral_centroid
 
+    # Low spectral rolloff → suppressed high-frequency energy
+    rolloff_score = 1.0 - spectral_rolloff
+
     # Low speaking ratio → many silences and hesitations
     silence_score = 1.0 - speaking_ratio
 
@@ -90,12 +93,12 @@ def _score_from_features(f: dict) -> dict:
     zcr_deviation = abs(zcr_mean - 0.25) / 0.25
     zcr_score = min(zcr_deviation, 1.0)
 
-    # ── Composite depression index (weighted sum, normalised to [0, 1]) ───────
-    # Weights reflect relative clinical informativeness:
-    #   speaking_ratio and rms_mean are most discriminative (Cummins et al. 2015)
-    weights = np.array([0.25, 0.20, 0.20, 0.25, 0.10])
+    # ── Composite depression index (weighted sum over all 6 features, in [0, 1]) ──
+    # Weights reflect relative clinical informativeness (Cummins et al. 2015):
+    #   [energy, variability, brightness, rolloff, silence, zcr]
+    weights = np.array([0.20, 0.20, 0.15, 0.15, 0.20, 0.10])
     components = np.array([energy_score, variability_score,
-                           brightness_score, silence_score, zcr_score])
+                           brightness_score, rolloff_score, silence_score, zcr_score])
     depression_index = float(np.dot(weights, components))  # [0, 1]
 
     # ── Map composite index to 4-class distribution ───────────────────────────
