@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 5 * 60 * 1000 } },
 });
 
-import SukhoonChat from './pages/SukhoonChat';
+import SaathiChat from './pages/SaathiChat';
 
 export default function App() {
   return (
@@ -35,7 +35,8 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout />}>
                 <Route path="/dashboard"  element={<Dashboard />} />
-                <Route path="/sukhoon"    element={<SukhoonChat />} />
+                <Route path="/saathi"     element={<SaathiChat />} />
+                <Route path="/sukhoon"    element={<Navigate to="/saathi" replace />} />
                 <Route path="/assessment" element={<Assessment />} />
                 <Route path="/results"    element={<Results />} />
                 <Route path="/history"    element={<History />} />

@@ -17,7 +17,7 @@ export function DashboardLayout() {
 
   const navItems = [
     { name: 'Dashboard',         path: '/dashboard',  icon: LayoutDashboard },
-    { name: 'Saathi Companion', path: '/sukhoon',    icon: MessageSquareHeart },
+    { name: 'Saathi Companion', path: '/saathi',     icon: MessageSquareHeart },
     { name: 'New Assessment',    path: '/assessment', icon: ClipboardList },
     { name: 'History',           path: '/history',    icon: History },
     { name: 'Mood Tracker',      path: '/mood',       icon: Heart },

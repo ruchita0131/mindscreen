@@ -1,5 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from pathlib import Path
 from typing import Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_DIR = Path(__file__).resolve().parent
+_ENV_PATH = _BACKEND_DIR / ".env"
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./mental_health.db"
@@ -24,6 +29,9 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = "http://localhost:5173"
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(str(_ENV_PATH), ".env"),
+        extra="ignore"
+    )
 
 settings = Settings()

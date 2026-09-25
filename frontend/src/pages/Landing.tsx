@@ -234,7 +234,7 @@ export default function Landing() {
                 </p>
                 <div className="pt-1">
                   <Button 
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/saathi')}
                     className="bg-[#81B29A] hover:bg-[#94D2BD] text-slate-950 font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full shadow-[0_0_20px_rgba(129,178,154,0.35)] transition-all inline-flex items-center gap-2"
                   >
                     🌿 Talk with Saathi <ArrowRight className="w-3.5 h-3.5" />
