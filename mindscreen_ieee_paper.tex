@@ -540,8 +540,7 @@ four core data-governance principles:
     Only the 6-dimensional compact numerical vector $\mathbf{f}$ is sent to the server.
   \item \textbf{External API privacy}: Free-text journal inputs sent to cloud inference
     endpoints (Hugging Face and Google Gemini APIs) are transmitted over TLS without
-    Personally Identifiable Information (PII) or user account identifiers. Zero data
-    retention is requested under API terms.
+    Personally Identifiable Information (PII) or user account identifiers.
   \item \textbf{Offline data containment}: When operating in disconnected mode, local
     rule-based and keyword fallbacks ensure complete operational continuity without any
     outbound data egress.
@@ -717,7 +716,7 @@ Overall Disambiguation Accuracy & 42.9\% (6/14) & \textbf{100.0\% (14/14)} \\
 \subsection{Deployment Latency and Memory}
 \label{sec:latency}
 
-All measurements were taken on a production cloud container
+All measurements were taken on a cloud-hosted evaluation container
 (0.5~vCPU, 512~MB RAM, Ubuntu 22.04, Python 3.11, FastAPI 0.111) under
 sequential single-request load (Table~\ref{tab:latency}).
 Each local component was timed over 50 invocations after a 10-call warm-up;
