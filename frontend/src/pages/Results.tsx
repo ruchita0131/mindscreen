@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { RiskResponse } from '../types/assessment';
-import { AlertTriangle, Phone, Home, RefreshCw, Brain, Mic, ClipboardList, CheckCircle, Info } from 'lucide-react';
+import { AlertTriangle, Phone, Home, RefreshCw, Brain, Mic, ClipboardList, CheckCircle, Info, FileText } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
+import { AcousticRadarChart } from '../components/tools/AcousticRadarChart';
+import { ClinicalReportModal } from '../components/tools/ClinicalReportModal';
 
 const RISK_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; barColor: string; description: string; advice: string[] }> = {
   minimal: {
@@ -48,6 +50,7 @@ export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
   const result = location.state?.result as RiskResponse;
+  const [showReport, setShowReport] = useState(false);
 
   if (!result) return <Navigate to="/dashboard" replace />;
 
@@ -189,6 +192,20 @@ export default function Results() {
         </div>
       </div>
 
+      {/* Acoustic Somatic Biomarkers Radar */}
+      {result.audio_features && (
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Mic className="w-4 h-4 text-purple-400" />
+            <h3 className="text-base font-semibold">Acoustic Biomarkers — Vocal Footprint</h3>
+          </div>
+          <p className="text-xs text-gray-500 mb-4">
+            Six-dimensional acoustic analysis extracted directly from your vocal recording via Web Audio API, mapped against healthy conversational baselines.
+          </p>
+          <AcousticRadarChart features={result.audio_features} />
+        </div>
+      )}
+
       {/* AI Explainability — Lexical Attribution */}
       {shapWords.length > 0 && (
         <div className="glass-card p-6">
@@ -236,11 +253,25 @@ export default function Results() {
           <Home className="w-4 h-4 mr-2" />
           Return to Dashboard
         </Button>
+        <Button
+          onClick={() => setShowReport(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold flex items-center gap-2"
+        >
+          <FileText className="w-4 h-4" />
+          Clinical Summary (PDF)
+        </Button>
         <Button className="bg-brand-teal hover:bg-brand-tealL text-white font-semibold" onClick={() => navigate('/assessment')}>
           <RefreshCw className="w-4 h-4 mr-2" />
           Take Another Assessment
         </Button>
       </div>
+
+      {/* Clinical Report Export Modal */}
+      <ClinicalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        result={result}
+      />
     </div>
   );
 }

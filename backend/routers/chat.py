@@ -135,8 +135,8 @@ def detect_topic(text: str) -> str:
     return "general"
 
 def is_crisis(text: str) -> bool:
-    lower = text.lower()
-    return any(k in lower for k in CRISIS_KEYWORDS)
+    from services.negation_service import detect_crisis_intent
+    return detect_crisis_intent(text)["is_crisis"]
 
 def get_fallback_reply(topic: str, turn_count: int) -> str:
     pool = FALLBACK_RESPONSES.get(topic, FALLBACK_RESPONSES["general"])

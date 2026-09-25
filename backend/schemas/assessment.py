@@ -26,6 +26,8 @@ class RiskResponse(BaseModel):
     risk_level: str
     confidence: float
     probabilities: Dict[str, float]
+    raw_probabilities: Optional[Dict[str, float]] = None
     shap_explanation: Optional[Dict[str, Any]] = None
+    audio_features: Optional[Dict[str, float]] = None
     crisis_flag: bool
     helplines: Optional[List[str]] = None

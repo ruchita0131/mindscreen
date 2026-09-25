@@ -35,6 +35,13 @@ export interface RiskResponse {
     words?: { word: string; value: number }[];
     phq_factors?: { question: string; value: number }[];
   } | null;
+  audio_features?: AudioFeatures | null;
+  raw_probabilities?: {
+    minimal: number;
+    mild: number;
+    moderate: number;
+    severe: number;
+  } | null;
   crisis_flag: boolean;
   helplines?: string[] | null;
 }
