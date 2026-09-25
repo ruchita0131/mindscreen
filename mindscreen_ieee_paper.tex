@@ -19,9 +19,9 @@
 
 \begin{document}
 
-\title{MindScreen: A Tri-Modal Decision-Level Late-Fusion Framework%
-  with Deterministic Clinical Overrides for Depression Screening%
-  and Crisis Triage\\
+% ── P2/Moderate Comment 3: Title reframed to match evaluation evidence ─────
+\title{MindScreen: A Tri-Modal Prototype for Depression Screening Support%
+  with Rule-Based High-Risk Escalation\\
 \thanks{This research was conducted as part of the Major Capstone Project,
 Department of Computer Science and Engineering,
 RV Institute of Technology and Management, Bengaluru, India.}}
@@ -41,42 +41,38 @@ RV Institute of Technology and Management, Bengaluru, India.}}
 
 \maketitle
 
-% ─────────────────────────────────────────────────────────────────────────────
+% ── P0: Abstract replaced with reviewer-aligned version ──────────────────
 \begin{abstract}
-Early identification of Major Depressive Disorder (MDD) is critical for
-effective therapeutic triaging, yet traditional clinical screening faces acute
-bottlenecks including episodic recall bias, social stigma, and severe
-specialist shortages.
-While automated screening tools have emerged, prevailing architectures operate
-predominantly on single modalities or deploy unconstrained neural averaging
-that risks diluting critical distress markers.
-This paper presents \textbf{MindScreen}, an intelligent, privacy-preserving
-tri-modal screening framework and conversational triage companion.
-MindScreen introduces a decision-level late-fusion architecture synthesizing
-three complementary observation channels: (i)~standardized clinical
-self-reports via the Patient Health Questionnaire-9 (PHQ-9),
-(ii)~affective semantics derived from transformer-based natural language
-processing~(NLP), and (iii)~acoustic vocal characterization.
-To resolve the vulnerability where multi-source linear averaging can conceal
-explicitly defined high-risk indicators, we formalize a deterministic
-\textbf{Clinical Safety Override (CSO)} that bypasses statistical averaging
-upon detection of acute clinical indicators.
-The CSO prevents dilution of explicitly defined high-risk indicators under
-three evaluated adversarial masking scenarios.
-Furthermore, we integrate \textbf{Saathi}, an autonomous conversational agent
-equipped with multi-turn context retention, affective topic classification,
-and crisis-resource routing with display of relevant national helpline
-information (Tele-MANAS and KIRAN).
-Local inference executes in under 25\,ms ($<$25\,MB RAM), while
-cloud-augmented inference completes with a mean latency of 512\,ms,
-demonstrating feasibility for resource-constrained edge and cloud healthcare
-deployments.
+Early identification of depressive symptoms and explicit high-risk indicators
+can support timely access to mental-health resources.
+This paper presents \textbf{MindScreen}, a tri-modal prototype that integrates
+Patient Health Questionnaire-9 (PHQ-9) responses, transformer-based text
+emotion classification, and an audio-payload-based production heuristic
+through decision-level late fusion.
+A rule-based \textbf{High-Risk Escalation (HRE)} module is introduced to
+prevent predefined indicators---including positive responses to PHQ-9
+Item~9, high questionnaire scores, and selected crisis-related
+keywords---from being suppressed by modality averaging.
+The system also integrates \textbf{Saathi}, an LLM-assisted conversational
+companion with multi-turn context and crisis-resource routing to national
+helpline information.
+Evaluation focuses on deterministic rule execution under three manually
+constructed masking scenarios and operational latency and memory profiling
+under a single-request cloud-container configuration.
+The results demonstrate the specified behavior of the escalation rules and
+the measured performance of the prototype, but do not establish clinical
+validity, diagnostic accuracy, or real-world safety.
+The acoustic production branch uses a payload-size heuristic and should not
+be interpreted as a validated acoustic biomarker model.
+Future work will address labeled clinical evaluation, probability calibration,
+robust acoustic feature extraction, and systematic assessment of
+conversational safety.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Multimodal late fusion, depression screening, PHQ-9, transformer NLP,
-acoustic biomarkers, clinical safety override, conversational triage,
-affective computing.
+Multimodal late fusion, depression screening support, PHQ-9, transformer NLP,
+rule-based escalation, conversational prototype, affective computing,
+mental health support systems.
 \end{IEEEkeywords}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -92,8 +88,9 @@ psychiatrists (approximately 0.75 per 100{,}000 population), geographic
 concentration of healthcare facilities in urban centers, and widespread
 socio-cultural stigma~\cite{gururaj2016}.
 
-The Patient Health Questionnaire-9 (PHQ-9)~\cite{kroenke2001} serves as the
-global clinical benchmark for evaluating depressive symptom severity.
+% ── Minor Comment 2: "global clinical benchmark" → precise wording ────────
+The PHQ-9~\cite{kroenke2001} is a widely used depression symptom-severity
+screening instrument.
 However, static psychometric self-reports suffer from notable operational
 limitations:
 \begin{itemize}
@@ -105,8 +102,7 @@ limitations:
     cognitive distortion patterns.
   \item \textbf{Omission of Physiological Biomarkers:} Self-reports cannot
     measure somatic or psychomotor correlates of depression, such as speech
-    monotony and vocal acoustic
-    flattening~\cite{cummins2015,yang2023}.
+    monotony and vocal acoustic flattening~\cite{cummins2015,yang2023}.
 \end{itemize}
 
 Recent developments in affective computing have utilized transformer language
@@ -115,129 +111,169 @@ analysis~\cite{scherer2013,cummins2015} to identify behavioral markers of
 depression.
 However, integrating heterogeneous signals into a clinical decision-support
 pipeline presents significant algorithmic challenges.
-Early-stage feature concatenation (early fusion) is highly sensitive to
-modality missingness (e.g., when a patient declines audio recording) and
-obscures the clinical explainability of individual channels.
-More critically, unconstrained probabilistic averaging introduces a dangerous
+Early-stage feature concatenation is highly sensitive to modality missingness
+and obscures the explainability of individual channels.
+More critically, unconstrained probabilistic averaging introduces a potential
 \textit{false-negative dilution}: if a patient expresses acute suicidal intent
 in text or on the PHQ-9 but exhibits calm vocal acoustics, linear averaging
-can dilute the composite risk below the severe threshold.
+can dilute the composite risk below the high-risk threshold.
 
-To resolve these challenges, this paper presents \textbf{MindScreen}, an
-intelligent tri-modal screening framework combining psychometrics, transformer
-NLP, and acoustic analysis.
-The primary contributions of this work are as follows:
+% ── P0: Contributions reframed to match evaluation evidence ───────────────
+To address these challenges, this paper presents \textbf{MindScreen},
+a tri-modal prototype for depression screening support.
+The primary contributions are as follows:
 \begin{enumerate}
-  \item \textbf{Tri-Modal Decision-Level Late-Fusion Model:}
-    We formulate a late-fusion model ($w_T = 0.50$, $w_A = 0.30$,
-    $w_Q = 0.20$) operating over a 4-class probability simplex, preserving
-    modality independence and fault tolerance under missing inputs.
-  \item \textbf{Deterministic Clinical Safety Override (CSO):}
-    We formulate an algorithmic safety boundary ensuring that explicitly
-    defined acute indicators (PHQ-9 Item~9 $> 0$, $S \ge 20$, or crisis text
-    tokens) bypass statistical averaging.
-    The CSO prevents dilution of these defined indicators under adversarial
-    conditions where one or more modalities conceal distress signals.
-  \item \textbf{Safety Override Verification:}
-    We verify the CSO on three adversarial masking scenarios
-    (Table~\ref{tab:safety}), demonstrating that the deterministic override
-    correctly classifies all cases that linear averaging would misclassify.
-  \item \textbf{Saathi Autonomous Crisis Companion:}
-    We develop a culturally grounded, multi-turn conversational agent with
-    automated crisis-trigger detection and crisis-resource routing to Indian
-    national helplines (Tele-MANAS and KIRAN).
-  \item \textbf{Resource-Constrained Production Profiling:}
-    We benchmark latency and memory footprint, demonstrating sub-25\,ms local
-    execution ($<$25\,MB RAM) and 512\,ms cloud-augmented latency.
+  \item \textbf{Tri-Modal Prototype Architecture:}
+    A decision-level late-fusion pipeline integrating PHQ-9 scoring,
+    text-based affective classification, and an audio-payload-based
+    production heuristic, preserving modality independence under missing
+    inputs.
+  \item \textbf{Rule-Based High-Risk Escalation (HRE):}
+    A deterministic decision layer that escalates predefined questionnaire and
+    text indicators (PHQ-9 Item~9 $> 0$, $S \ge 20$, or crisis text tokens)
+    independently of the fused score, preventing their suppression by modality
+    averaging.
+  \item \textbf{Rule Execution Verification:}
+    Evaluation of the escalation logic under three manually constructed masking
+    scenarios designed to test selected high-risk conditions
+    (Table~\ref{tab:safety}).
+  \item \textbf{Conversational Resource-Routing Component:}
+    Integration of an LLM-assisted conversational companion with rule-based
+    crisis-resource detection and display of national helpline information
+    (Tele-MANAS, KIRAN).
+  \item \textbf{Prototype Performance Profiling:}
+    Measurement of selected local and cloud-augmented pipeline components
+    under a specified single-request benchmark configuration
+    (Table~\ref{tab:latency}).
 \end{enumerate}
+
+% ── Minor Comment 3: Terminology defined up front ─────────────────────────
+\subsection{Terminology Definitions}
+\label{sec:terminology}
+
+To prevent terminological ambiguity, Table~\ref{tab:terminology_defs} defines
+key terms as used in this paper.
+In particular, MindScreen does not perform clinical diagnosis, emergency
+dispatch, or clinical safety validation.
+
+\begin{table}[!t]
+\caption{Terminology Definitions Used in This Paper}
+\label{tab:terminology_defs}
+\centering
+\begin{tabular}{@{}p{2.2cm}p{5.5cm}@{}}
+\toprule
+\textbf{Term} & \textbf{Meaning in this paper} \\
+\midrule
+Screening category
+  & System's four-category output: minimal, mild, moderate, severe \\
+Priority score
+  & Maximum fused probability or rule-based floor value;
+    not a calibrated posterior probability \\
+Crisis flag ($C_F$)
+  & Boolean result of explicit escalation conditions \\
+Resource routing
+  & Display of national helpline information to the user \\
+HRE module
+  & Rule-based High-Risk Escalation module (previously called CSO) \\
+Clinical diagnosis
+  & Not performed by the system \\
+Emergency dispatch
+  & Not implemented by the system \\
+Clinical safety & Not validated by the reported experiments \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Related Work and State-of-the-Art Taxonomy}
 \label{sec:related}
 
 \subsection{Psychometric Screening Instruments}
-The PHQ-9 is a 9-item validated questionnaire where items are scored from 0
-to 3, yielding an aggregate score $S \in [0, 27]$.
+% ── Minor Comment 2: Precise PHQ-9 description ───────────────────────────
+The PHQ-9 is a 9-item validated self-report instrument with an established
+literature base for depression symptom-severity
+screening~\cite{kroenke2001}.
+Items are scored 0 to 3, yielding an aggregate score $S \in [0, 27]$.
 Standard clinical guidelines define five severity intervals: minimal (0--4),
 mild (5--9), moderate (10--14), moderately severe (15--19), and severe
 (20--27)~\cite{kroenke2001}.
 In digital screening workflows, categories are frequently collapsed into a
-4-tier decision schema (minimal, mild, moderate, severe) where scores
-$S \ge 15$ indicate high clinical concern~\cite{kessler2003}.
+4-tier decision schema where scores $S \ge 15$ indicate elevated clinical
+concern~\cite{kessler2003}.
 However, standalone questionnaire systems lack behavioral verification against
 somatic or vocal markers.
 
 \subsection{Natural Language Processing in Affective Psychiatry}
 Transformer architectures have achieved high benchmarks in computational
 psychiatry.
-Ji~et~al.~\cite{ji2022} developed \textbf{MentalBERT} and
-\textbf{MentalRoBERTa}, demonstrating that domain-specific pre-training on
-mental health corpora significantly outperforms general language models on
-depressive symptom identification.
+Ji~et~al.~\cite{ji2022} developed MentalBERT and MentalRoBERTa,
+demonstrating that domain-specific pre-training on mental health corpora
+outperforms general language models on depressive symptom identification.
 Xu~et~al.~\cite{xu2024} established that instruction-tuned large language
-models can extract nuanced cognitive distortions from patient narratives.
+models can extract cognitive distortions from patient narratives.
 Distilled RoBERTa models fine-tuned on emotion
-categorization~\cite{hartmann2022} provide robust discriminative
-representations across valence and arousal dimensions.
+categorization~\cite{hartmann2022} provide discriminative representations
+across valence and arousal dimensions.
 In production settings, pairing hosted neural transformers with deterministic
-lexical sentiment fallbacks is essential for guaranteeing uninterrupted
-clinical availability.
+lexical fallbacks can support service continuity when remote inference is
+unavailable.
 
 \subsection{Acoustic Speech Biomarkers}
 Depression induces observable neuro-motor changes in speech production,
 including reduced vocal fold tension, restricted articulatory velocity, and
 flattened prosody~\cite{cummins2015,scherer2013}.
-Benchmark studies on the Distress Analysis Interview Corpus
-(DAIC-WOZ)~\cite{gratch2014} have shown that fundamental frequency ($F_0$)
-variation, Mel-Frequency Cepstral Coefficients (MFCCs), and vocal intensity
-serve as reliable indicators of distress.
-While comprehensive acoustic extraction requires significant memory,
-cloud-deployed screening systems benefit from calibrated vocal activity and
-energy representations that operate within strict microservice memory limits.
+Studies on the Distress Analysis Interview Corpus
+(DAIC-WOZ)~\cite{gratch2014} have indicated that $F_0$ variation, MFCCs,
+and vocal intensity may serve as indicators of distress.
+Comprehensive acoustic extraction requires significant memory resources;
+cloud-deployed systems therefore face practical constraints in applying full
+spectrogram-based analysis.
 
-\subsection{Taxonomy of Existing Approaches}
+\subsection{Comparison With Related Systems}
 
-Table~\ref{tab:taxonomy} compares MindScreen against representative
-state-of-the-art mental health screening systems, highlighting modality
-coverage, fusion paradigm, safety mechanisms, and evaluation benchmarks.
+% ── Moderate Comment 1: Taxonomy enriched with evaluation type column ─────
+Table~\ref{tab:taxonomy} compares MindScreen against representative mental
+health screening systems.
+Note that the reported metrics are not directly comparable across rows because
+they reflect different evaluation paradigms (randomized trial, accuracy,
+F-score, concordance, and rule verification).
+MindScreen's evaluation does not include predictive classification metrics
+and should therefore not be compared on equal terms to systems that report
+accuracy or F-score on labeled data.
 
 \begin{table*}[!t]
-\caption{Taxonomy and Comparison With State-of-the-Art Mental Health
-  Screening Systems}
+\caption{Comparison With Related Mental Health Screening Systems
+  (Metrics are not directly comparable across paradigms;
+   see column ``Evaluation Type'')}
 \label{tab:taxonomy}
 \centering
-\begin{tabular}{@{}llcccll@{}}
+\begin{tabular}{@{}llccclll@{}}
 \toprule
-\textbf{System} & \textbf{Year} & \textbf{Modalities}
-  & \textbf{Fusion} & \textbf{Safety Override}
-  & \textbf{Primary Focus / Limitation}
-  & \textbf{Reported Metric} \\
+\textbf{System} & \textbf{Year}
+  & \textbf{Modalities} & \textbf{Fusion}
+  & \textbf{Escalation Rule} & \textbf{Evaluation Type}
+  & \textbf{Clinical Validation} & \textbf{Reported Metric} \\
 \midrule
 Woebot~\cite{fitzpatrick2017}
-  & 2017 & Text & None (Rule/NLP) & Static Prompts
-  & Conversational CBT; no physiological channel
-  & PHQ-9 $\Delta = -1.72$ \\
+  & 2017 & Text & None & Static prompts
+  & RCT & Yes & PHQ-9 $\Delta=-1.72$ \\
 SimSensei~\cite{devault2014}
-  & 2014 & Video+Audio+Text & Early Feature & No
-  & Virtual interviewer; requires lab setup
-  & Accuracy: 74.2\% \\
+  & 2014 & Video+Audio+Text & Early feature & None
+  & Accuracy on labeled corpus & Partial & 74.2\% \\
 Cummins~et~al.~\cite{cummins2015}
-  & 2015 & Audio & None (Survey) & No
-  & Biomarker survey; no psychometric grounding
-  & F1: 0.71--0.78 \\
+  & 2015 & Audio & None & None
+  & F-score on labeled corpus & No & F1: 0.71--0.78 \\
 MentalBERT~\cite{ji2022}
-  & 2022 & Text & None (Transformer) & No
-  & Domain NLP pretraining; no safety override
-  & Macro-F1: 0.812 \\
+  & 2022 & Text & None & None
+  & F-score on labeled corpus & No & Macro-F1: 0.812 \\
 AVEC~\cite{ringeval2019}
-  & 2019 & Audio+Video+Text & Early/Mid & No
-  & Research competition; no clinical pipeline
-  & CCC: 0.620 \\
-\textbf{MindScreen (proposed)}
+  & 2019 & Audio+Video+Text & Early/mid & None
+  & CCC on labeled corpus & No & CCC: 0.620 \\
+\textbf{MindScreen (this work)}
   & \textbf{2026} & \textbf{PHQ-9+Text+Audio}
-  & \textbf{Decision-Level Late} & \textbf{Deterministic CSO}
-  & \textbf{Tri-modal fusion with safety override}
-  & \textbf{CSO: 3/3 verified} \\
+  & \textbf{Decision-level late} & \textbf{Deterministic HRE}
+  & \textbf{Rule execution (3 scenarios)}
+  & \textbf{No} & \textbf{3/3 scenarios pass} \\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -250,15 +286,51 @@ AVEC~\cite{ringeval2019}
 Let the input space for an assessment session be defined as a tuple
 $\mathcal{X} = (\mathbf{q},\, T,\, \mathbf{a})$, where:
 \begin{itemize}
-  \item $\mathbf{q} = [q_1, q_2, \dots, q_9] \in \{0,1,2,3\}^9$ denotes the
+  \item $\mathbf{q} = [q_1, \dots, q_9] \in \{0,1,2,3\}^9$ denotes the
     discrete PHQ-9 survey responses;
   \item $T \in \mathcal{V}^*$ represents the free-form text journal entry; and
   \item $\mathbf{a} \in \mathcal{A}$ represents the digitized speech audio
     signal.
 \end{itemize}
 
-We define the discrete target space of depression severity as an ordered
-4-tier set:
+% ── P1 / Major Comment 4: Four-class taxonomy explicitly defined ──────────
+\subsection{Four-Category Screening Taxonomy}
+\label{sec:taxonomy}
+
+The system maps PHQ-9 scores to a system-specific 4-category screening
+taxonomy (Table~\ref{tab:phq_mapping}).
+This taxonomy is a system-design decision, not the standard 5-tier PHQ-9
+clinical interpretation.
+The two highest PHQ-9 clinical categories (moderately severe: 15--19; severe:
+20--27) are combined into a single high-severity screening category.
+This design choice reflects the system's use case as a preliminary screening
+tool: both score ranges indicate a need for professional follow-up, and the
+implementation treats both as requiring immediate priority-score assignment
+via the HRE module (Section~\ref{sec:hre}).
+Researchers using MindScreen output should not interpret the ``severe''
+screening category as equivalent to the standard PHQ-9 clinical severity
+label ``severe (20--27)''.
+
+\begin{table}[!t]
+\caption{System-Defined Four-Category Screening Taxonomy Derived from PHQ-9}
+\label{tab:phq_mapping}
+\centering
+\begin{tabular}{@{}ccll@{}}
+\toprule
+\textbf{PHQ-9 Score} & \textbf{Standard PHQ-9 Category}
+  & \textbf{MindScreen Category} & \textbf{Design Rationale} \\
+\midrule
+0--4  & Minimal           & Minimal  & Direct mapping; no follow-up indicated \\
+5--9  & Mild              & Mild     & Direct mapping; monitoring recommended \\
+10--14& Moderate          & Moderate & Direct mapping; clinical consultation advised \\
+15--19& Moderately severe & \multirow{2}{*}{Severe (system)} & Both ranges
+  indicate urgent follow-up; \\
+20--27& Severe            &  & merged into one high-priority tier \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+We define the system's 4-category output space as:
 \begin{equation}
   \mathcal{C} = \{c_0\!:\!\text{minimal},\;
                   c_1\!:\!\text{mild},\;
@@ -266,10 +338,16 @@ We define the discrete target space of depression severity as an ordered
                   c_3\!:\!\text{severe}\}.
   \label{eq:label_space}
 \end{equation}
-The objective is to map $\mathcal{X}$ to a calibrated probability distribution
-$\mathbf{p}^F \in \Delta^3$ over the probability simplex, from which the final
-risk classification $\hat{y} \in \mathcal{C}$ and a priority score
-$c \in [0,1]$ are derived.
+The objective is to map $\mathcal{X}$ to a normalized heuristic score
+distribution $\mathbf{p}^F \in \Delta^3$, from which the final screening
+category $\hat{y} \in \mathcal{C}$ and a priority score $c \in [0,1]$ are
+derived.
+% ── P0: "calibrated probability distribution" replaced throughout ─────────
+Note that $\mathbf{p}^F$ is a normalized score vector constructed from
+heuristic mappings; it has not been demonstrated to be a calibrated
+probability distribution in the statistical sense (i.e., predicted values
+do not have empirically verified correspondence with observed class
+frequencies).
 
 \subsection{Individual Modality Processing Pipelines}
 
@@ -279,9 +357,8 @@ The clinical score $S$ is calculated by summing the 9 ordinal responses:
   S = \sum_{i=1}^{9} q_i, \quad S \in [0, 27].
   \label{eq:phq_score}
 \end{equation}
-We define a piecewise mapping function
-$\Phi_Q: [0, 27] \to \Delta^3$ that aligns clinical cutoff intervals with the
-4-class space:
+A piecewise mapping function $\Phi_Q: [0, 27] \to \Delta^3$ aligns clinical
+cutoff intervals with the 4-category space using fixed probability vectors:
 \begin{equation}
   \mathbf{p}^Q =
   \begin{cases}
@@ -292,26 +369,30 @@ $\Phi_Q: [0, 27] \to \Delta^3$ that aligns clinical cutoff intervals with the
   \end{cases}
   \label{eq:phq_probs}
 \end{equation}
-Scores $S \ge 15$ (encompassing moderately severe and severe clinical ranges)
-map to the severe screening tier, while preserving individual item scores for
-granular safety analysis.
+These vectors are system-defined constants, not estimated from labeled data.
+Scores $S \ge 15$ map to the high-severity tier as defined in
+Table~\ref{tab:phq_mapping}.
 
 \subsubsection{NLP Text Branch ($\mathbf{p}^T$)}
+% ── Major Comment 8: Emotion mapping framed as heuristic ─────────────────
 Free-text reflections $T$ are processed by an emotion classification
-transformer model $\mathcal{M}_{\text{NLP}}$
-(DistilRoBERTa~\cite{hartmann2022}), accessed via the HuggingFace Inference
-API.
-For an input sequence, the model outputs an emotion class
-$e^* \in \mathcal{E}$ with softmax confidence $s \in [0, 1]$:
+transformer (DistilRoBERTa~\cite{hartmann2022}), accessed via the HuggingFace
+Inference API.
+The model outputs an emotion class $e^* \in \mathcal{E}$ with confidence
+$s \in [0, 1]$:
 \begin{equation}
   (e^*,\, s) =
     \arg\max_{e \in \mathcal{E}}\,
     P\!\left(e \mid T;\, \Theta_{\text{NLP}}\right).
   \label{eq:nlp_argmax}
 \end{equation}
-We define an affective translation function
-$\Gamma: \mathcal{E} \to \{0,1,2,3\}$
-based on psychological emotion-dysregulation models:
+A heuristic affective-state-to-risk mapping
+$\Gamma: \mathcal{E} \to \{0,1,2,3\}$ translates general emotion labels into
+screening categories.
+This mapping is a design approximation; general emotion classification is
+not equivalent to depression severity assessment, and the relationship between
+these emotion categories and clinical depression severity has not been
+empirically validated in this work:
 \begin{equation}
   \Gamma(e^*) =
   \begin{cases}
@@ -322,13 +403,20 @@ based on psychological emotion-dysregulation models:
   \label{eq:emotion_map}
 \end{equation}
 Let $r = \Gamma(e^*)$.
-Lexical scanning checks $T$ for acute depressive tokens
+Lexical scanning checks $T$ for a defined crisis token set
 $\mathcal{K}_{\text{crisis}} = \{\text{``suicide''},\;\text{``kill''},\;
 \text{``hopeless''},\;\text{``worthless''}\}$.
-If $\exists\,w \in T \cap \mathcal{K}_{\text{crisis}}$, the index is
-adjusted: $r \leftarrow 3$.
-The non-normalized score vector $\mathbf{b} \in \mathbb{R}^4$ is constructed
-as:
+If $\exists\,w \in T \cap \mathcal{K}_{\text{crisis}}$, then $r \leftarrow 3$.
+
+\noindent\textbf{Limitations of the crisis token set.}
+Simple keyword matching does not handle negation (``I do not want to kill
+myself''), sarcasm, third-party references (``my friend said she wanted to
+die''), indirect expressions (``I watched a film about suicide''), or
+colloquial usage (``I feel worthless because I failed an exam'').
+The token list is a minimal heuristic prototype;
+systematic false-positive and false-negative behavior has not been evaluated.
+
+The non-normalized score vector $\mathbf{b} \in \mathbb{R}^4$ is:
 \begin{equation}
   b_k =
   \begin{cases}
@@ -337,63 +425,75 @@ as:
   \end{cases}
   \label{eq:score_vector}
 \end{equation}
-The normalized probability distribution $\mathbf{p}^T$ is obtained via simplex
-projection:
+and the normalized heuristic score distribution $\mathbf{p}^T$ is:
 \begin{equation}
   p_k^T = \frac{b_k}{\displaystyle\sum_{j=0}^{3} b_j},
   \quad \forall k \in \{0,1,2,3\}.
   \label{eq:nlp_normalize}
 \end{equation}
-When remote transformer inference is unreachable, an internal deterministic
-keyword rule engine evaluates lexical sentiment to select calibrated fallback
-distributions, ensuring uninterrupted clinical availability.
+When remote inference is unreachable, an internal deterministic keyword rule
+engine selects fallback distributions to support service continuity when the
+API is unavailable.
 
 \subsubsection{Acoustic Processing Branch ($\mathbf{p}^A$)}
-MindScreen implements a two-tier acoustic architecture:
-\begin{itemize}
-  \item \textbf{Offline Research Model:}
-    A 3-layer PyTorch MLP ($30 \!\to\! 128 \!\to\! 64 \!\to\! 4$) with Batch
-    Normalization, ReLU, and Dropout ($p = 0.3$) was designed to operate on a
-    30-dimensional acoustic feature vector aligned with the
-    DAIC-WOZ corpus~\cite{gratch2014}:
-    \begin{equation}
-      \mathbf{x}_A =
-        \bigl[F_{0,\mu},\; F_{0,\sigma},\; \text{ZCR},\; \text{RMS},\;
-              \boldsymbol{\mu}_{\text{MFCC}_{1:13}},\;
-              \boldsymbol{\sigma}_{\text{MFCC}_{1:13}}\bigr]^T
-        \in \mathbb{R}^{30}.
-      \label{eq:acoustic_features}
-    \end{equation}
-    The model checkpoint is included in the repository for reproducibility;
-    large-scale prospective evaluation on DAIC-WOZ is reserved for future
-    IRB-approved trials.
-  \item \textbf{Edge Production Proxy:}
-    Under cloud-container memory limits ($<$512\,MB RAM), client audio
-    captured via HTML5 MediaRecorder (Opus/WebM) is evaluated using a
-    speech-activity energy index
-    $B = |\text{Base64Decode}(\mathbf{a})|\,/\,1024$ (kB):
-    \begin{equation}
-      \mathbf{p}^A =
-      \begin{cases}
-        [0.15,\;0.20,\;0.55,\;0.10]^T, & B < 5\;\text{kB}
-          \;(\text{Low Activity}) \\
-        [0.20,\;0.55,\;0.20,\;0.05]^T, & 5 \le B < 30\;\text{kB}
-          \;(\text{Restricted}) \\
-        [0.65,\;0.20,\;0.10,\;0.05]^T, & B \ge 30\;\text{kB}
-          \;(\text{Fluent Energy}) \\
-        [0.55,\;0.25,\;0.15,\;0.05]^T, & \text{Recording omitted}
-      \end{cases}
-      \label{eq:acoustic_proxy}
-    \end{equation}
-\end{itemize}
+\label{sec:acoustic}
+MindScreen implements a two-tier acoustic architecture.
 
-The production energy proxy provides a clinically conservative heuristic:
-silence and very short clips elevate the moderate-risk prior, reducing the
-probability of missed moderate-to-severe presentations when acoustic data are
-limited.
+\noindent\textbf{Offline Research Model.}
+A 3-layer PyTorch MLP ($30 \!\to\! 128 \!\to\! 64 \!\to\! 4$) with Batch
+Normalization, ReLU, and Dropout ($p = 0.3$) was designed around a
+30-dimensional acoustic feature vector aligned with the
+DAIC-WOZ corpus~\cite{gratch2014}:
+\begin{equation}
+  \mathbf{x}_A =
+    \bigl[F_{0,\mu},\; F_{0,\sigma},\; \text{ZCR},\; \text{RMS},\;
+          \boldsymbol{\mu}_{\text{MFCC}_{1:13}},\;
+          \boldsymbol{\sigma}_{\text{MFCC}_{1:13}}\bigr]^T
+    \in \mathbb{R}^{30}.
+  \label{eq:acoustic_features}
+\end{equation}
+The dimensional breakdown is: 2 ($F_0$ statistics) + 1 (ZCR) + 1 (RMS) + 13
+(MFCC means) + 13 (MFCC standard deviations) = 30.
+Features are intended to be computed per utterance (mean/std aggregation over
+frames); target window size is 25~ms with 10~ms hop at 16~kHz.
+MFCC coefficients~1--13 are used (excluding the zeroth energy coefficient).
+$F_0$ handling for unvoiced frames and feature normalization procedures are
+implementation-level details; training, validation, and test results for this
+checkpoint have not been reported in this paper.
+The model checkpoint is included in the repository for reproducibility of the
+architecture; it should \textbf{not} be used as evidence of acoustic-biomarker
+effectiveness.
 
-\noindent\textbf{Note on results scope:}
-All tri-modal fusion evaluations (Section~\ref{sec:eval}), CSO verification
+\noindent\textbf{Edge Production Proxy.}
+% ── P0 Major Comment 2: Proxy clearly labeled as engineering heuristic ────
+Under cloud-container memory limits ($<$512~MB RAM), the system evaluates
+audio using an audio-payload-size heuristic.
+This heuristic is not a validated acoustic biomarker estimator.
+Decoded payload size is affected by recording duration, encoder settings,
+codec, bitrate, browser behavior, and audio content; it is not equivalent to
+measured acoustic energy or validated vocal biomarkers.
+The threshold values (5~kB and 30~kB) and the corresponding fixed probability
+vectors are engineering design choices, not estimates derived from labeled
+acoustic data.
+The heuristic is retained to enable end-to-end architecture testing under
+resource constraints.
+\begin{equation}
+  \mathbf{p}^A =
+  \begin{cases}
+    [0.15,\;0.20,\;0.55,\;0.10]^T, & B < 5\;\text{kB}
+      \;(\text{Short payload}) \\
+    [0.20,\;0.55,\;0.20,\;0.05]^T, & 5 \le B < 30\;\text{kB}
+      \;(\text{Medium payload}) \\
+    [0.65,\;0.20,\;0.10,\;0.05]^T, & B \ge 30\;\text{kB}
+      \;(\text{Long payload}) \\
+    [0.55,\;0.25,\;0.15,\;0.05]^T, & \text{Recording omitted}
+  \end{cases}
+  \label{eq:acoustic_proxy}
+\end{equation}
+where $B = |\text{Base64Decode}(\mathbf{a})|\,/\,1024$ (kB).
+
+\noindent\textbf{Note on reported results scope.}
+All tri-modal fusion evaluations (Section~\ref{sec:eval}), HRE verification
 scenarios (Table~\ref{tab:safety}), and latency profiling
 (Table~\ref{tab:latency}) use the \emph{Edge Production Proxy}
 \eqref{eq:acoustic_proxy}.
@@ -402,24 +502,38 @@ it is not active in the deployed cloud instance and is not used to generate
 any result reported in this paper.
 
 \subsection{Decision-Level Late Fusion}
+\label{sec:fusion}
+
 The late-fusion module computes a convex combination of the three modality
-distributions:
+score vectors:
 \begin{equation}
   \mathbf{u} = w_T\,\mathbf{p}^T + w_A\,\mathbf{p}^A + w_Q\,\mathbf{p}^Q,
   \label{eq:fusion_weighted}
 \end{equation}
-where empirically selected weights satisfy $\sum_m w_m = 1.0$, with
-$w_T = 0.50$, $w_A = 0.30$, and $w_Q = 0.20$.
-These weights reflect the relative clinical informativeness of each modality:
-free-text affective semantics are the most expressive channel, followed by
-vocal speech activity, with PHQ-9 providing a validated psychometric anchor.
-Normalizing $\mathbf{u}$ yields the fused probability vector:
+% ── Major Comment 7: "empirically selected" corrected ─────────────────────
+where manually specified weights based on the authors' design assumptions
+satisfy $\sum_m w_m = 1.0$, with $w_T = 0.50$, $w_A = 0.30$, and
+$w_Q = 0.20$.
+These weights reflect assumed relative informativeness of each modality:
+text is given the highest weight as the primary source of subjective
+expression, followed by audio-based speech activity, with PHQ-9 providing a
+psychometrically anchored baseline.
+The weights have not been empirically optimized; optimization via
+cross-validation on labeled clinical data is identified as future work.
+
+% ── Moderate Comment 6: Normalization redundancy acknowledged ─────────────
+Since each $\mathbf{p}^m$ lies on the probability simplex
+($\sum_k p_k^m = 1$) and $\sum_m w_m = 1$, the weighted sum $\mathbf{u}$
+already satisfies $\sum_k u_k = 1$.
+Normalization is therefore redundant under these assumptions but is retained
+as a defensive implementation step to handle floating-point accumulation and
+any future change in input guarantees:
 \begin{equation}
   p_k^F = \frac{u_k}{\displaystyle\sum_{j=0}^{3} u_j},
   \quad \forall k \in \{0,1,2,3\}.
   \label{eq:fusion_normalize}
 \end{equation}
-The base predicted class $\hat{y}$ and priority score $c$ are:
+The base screening category $\hat{y}$ and priority score $c$ are:
 \begin{equation}
   \hat{y} = \arg\max_{k \in \mathcal{C}}\,p_k^F,
   \qquad
@@ -427,51 +541,96 @@ The base predicted class $\hat{y}$ and priority score $c$ are:
   \label{eq:prediction}
 \end{equation}
 
-\subsection{Clinical Safety Override (CSO)}
-In clinical screening, statistical averaging must not suppress critical warning
-signs.
-We formalize two deterministic non-linear safety bounds.
+% ── P1 Major Comment 6: CSO renamed HRE, decision table added ─────────────
+\subsection{Rule-Based High-Risk Escalation (HRE) Module}
+\label{sec:hre}
 
-\noindent\textbf{(i) Severe Score Override.}
-If $S \ge 20$ (Kroenke~et~al.~\cite{kroenke2001}), the classification is
-deterministically forced to severe.
-The reported value of $c$ is set to a rule-based priority floor---not a
-calibrated posterior probability---to signal the mandatory nature of the
-override:
+In a screening support tool, statistical averaging must not suppress
+explicitly defined high-risk indicators.
+We formalize two deterministic safety bounds.
+The HRE module implements rule execution; it does not validate clinical safety
+or crisis detection sensitivity.
+
+\noindent\textbf{(i) High-Score Override.}
+If $S \ge 20$ (Kroenke~et~al.~\cite{kroenke2001}), the screening category
+is deterministically set to severe.
+The priority score is set to a rule-based floor value, not a calibrated
+posterior probability:
 \begin{equation}
   S \ge 20 \;\Rightarrow\;
     \hat{y} \leftarrow \text{severe},\quad
     c \leftarrow \max(0.90,\; c).
-  \label{eq:cso_severe}
+  \label{eq:hre_severe}
 \end{equation}
-After \eqref{eq:cso_severe}, $c$ denotes a minimum rule-triggered priority
-score and should not be interpreted as a calibrated posterior probability.
 
-\noindent\textbf{(ii) Acute Crisis Flag.}
-If suicidal ideation is endorsed on PHQ-9 Item~9 ($q_9 > 0$) or acute
-distress keywords appear in~$T$, the crisis flag $C_F$ is raised:
+\noindent\textbf{(ii) Explicit Indicator Flag.}
+The crisis flag $C_F$ is raised when any of the following explicit conditions
+holds:
 \begin{equation}
   C_F = (S \ge 20) \;\lor\; (q_9 > 0)
-        \;\lor\; (\hat{y} = \text{severe})
+        \;\lor\; (\hat{y} = c_3)
         \;\lor\; \text{CrisisTokens}(T).
   \label{eq:crisis_flag}
 \end{equation}
-When $q_9 > 0$ or crisis tokens are detected, the classification is escalated
-regardless of the fused probability vector:
+Note that $(\hat{y} = c_3)$ in \eqref{eq:crisis_flag} means a severe
+screening category triggers the crisis flag.
+This distinguishes high symptom burden (severe PHQ-9 tier) from explicit
+ideation indicators ($q_9 > 0$ or crisis tokens).
+When $q_9 > 0$ or crisis tokens are detected, the screening category is
+escalated regardless of the fused score:
 \begin{equation}
   (q_9 > 0) \;\lor\; \text{CrisisTokens}(T)
   \;\Rightarrow\;
-  \hat{y} \leftarrow \text{severe}.
-  \label{eq:crisis_escalate}
+  \hat{y} \leftarrow c_3,\quad c \leftarrow \max(0.90,\; c).
+  \label{eq:hre_escalate}
 \end{equation}
+
+% ── Major Comment 6B: Priority floor applied to all HRE conditions ────────
+The rule-based priority floor $c \leftarrow \max(0.90,\; c)$ is applied
+under all three HRE trigger conditions ($S \ge 20$, $q_9 > 0$, and crisis
+token detection), not only the high-score condition.
+This value denotes a minimum priority indicator for a rule-triggered outcome
+and should not be interpreted as a calibrated posterior probability.
+
+% ── Major Comment 6A: Formal decision table ───────────────────────────────
+Table~\ref{tab:hre_decision} provides the formal decision table for all
+HRE trigger combinations, separating symptom severity, crisis flag, resource
+display, and priority score.
+
+\begin{table}[!t]
+\caption{HRE Module Decision Table: Outputs by Trigger Condition}
+\label{tab:hre_decision}
+\centering
+\begin{tabular}{@{}p{2.6cm}cccp{1.6cm}@{}}
+\toprule
+\textbf{Trigger Condition} & \textbf{Category} & \textbf{$C_F$}
+  & \textbf{Resource Display} & \textbf{Priority Score} \\
+\midrule
+None (fused output only)
+  & $\hat{y}$ from \eqref{eq:prediction} & FALSE & No
+  & $c$ from \eqref{eq:prediction} \\
+$S \ge 20$ only
+  & Severe & TRUE & Yes & $\max(0.90, c)$ \\
+$q_9 > 0$ only
+  & Severe & TRUE & Yes & $\max(0.90, c)$ \\
+Crisis token in $T$ only
+  & Severe & TRUE & Yes & $\max(0.90, c)$ \\
+Fused $\hat{y} = c_3$ only
+  & Severe & TRUE & Yes & $c$ (unchanged) \\
+Multiple conditions
+  & Severe & TRUE & Yes & $\max(0.90, c)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 Algorithm~\ref{alg:fusion} details the complete decision flow.
 
 \begin{algorithm}[!t]
-\caption{Tri-Modal Decision Fusion With Clinical Safety Override}
+\caption{Tri-Modal Fusion With Rule-Based High-Risk Escalation}
 \label{alg:fusion}
 \begin{algorithmic}[1]
 \REQUIRE PHQ-9 answers $\mathbf{q}$, text $T$, audio $\mathbf{a}$
-\ENSURE Risk class $\hat{y} \in \mathcal{C}$,
+\ENSURE Screening category $\hat{y} \in \mathcal{C}$,
         priority score $c \in [0,1]$, crisis flag $C_F$
 \STATE Compute $S \leftarrow \sum_{i=1}^9 q_i$
   \hfill $\triangleright$ \eqref{eq:phq_score}
@@ -485,122 +644,136 @@ Algorithm~\ref{alg:fusion} details the complete decision flow.
   0.50\,\mathbf{p}^T + 0.30\,\mathbf{p}^A + 0.20\,\mathbf{p}^Q$
   \hfill $\triangleright$ \eqref{eq:fusion_weighted}
 \STATE $\mathbf{p}^F \leftarrow \mathbf{u}/\!\sum_j u_j$
-  \hfill $\triangleright$ \eqref{eq:fusion_normalize}
+  \hfill $\triangleright$ \eqref{eq:fusion_normalize} (defensive)
 \STATE $\hat{y} \leftarrow \arg\max_k p_k^F$;\quad
        $c     \leftarrow \max_k p_k^F$
   \hfill $\triangleright$ \eqref{eq:prediction}
 \STATE $C_F \leftarrow \text{FALSE}$
+\IF{$\hat{y} = c_3$}
+  \STATE $C_F \leftarrow \text{TRUE}$; display resource routing
+\ENDIF
 \IF{$S \ge 20 \;\lor\; q_9 > 0 \;\lor\; \text{CrisisTokens}(T)$}
-  \STATE $\hat{y} \leftarrow \text{severe}$
-  \STATE $c \leftarrow \max(0.90, c)$
-    \hfill $\triangleright$ rule-based priority floor, see \eqref{eq:cso_severe}
+  \STATE $\hat{y} \leftarrow c_3$;\quad
+         $c \leftarrow \max(0.90, c)$
+    \hfill $\triangleright$ rule-based priority floor, \eqref{eq:hre_severe}--\eqref{eq:hre_escalate}
   \STATE $C_F \leftarrow \text{TRUE}$
-  \STATE Display crisis-resource routing metadata
-    (Tele-MANAS, KIRAN helpline numbers)
+  \STATE Display crisis-resource routing (Tele-MANAS, KIRAN numbers)
 \ENDIF
 \RETURN $\hat{y},\; c,\; \mathbf{p}^F,\; C_F$
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Saathi: Conversational Agent and Crisis Resource Routing}
-MindScreen integrates \textbf{Saathi}, an empathetic companion designed for
-ongoing emotional reflection.
-Saathi operates through a hierarchical four-tier conversational state machine:
+\subsection{Saathi: LLM-Assisted Conversational Companion}
+% ── Minor Comment 4: "autonomous" → "LLM-assisted" ───────────────────────
+MindScreen integrates \textbf{Saathi}, an LLM-assisted conversational
+companion for ongoing emotional reflection.
+Saathi operates through a hierarchical four-tier pipeline.
+No clinical effectiveness evaluation of Saathi's responses has been performed;
+it is presented as an implemented system component:
 \begin{enumerate}
   \item \textbf{Crisis Resource Router:}
-    Detects acute self-harm ideation in dialogue and immediately displays
-    de-escalation text alongside clickable helpline information for India's
+    Detects predefined crisis-related keywords in dialogue and immediately
+    displays de-escalation text alongside national helpline information for
     Tele-MANAS ($14416$ / $1800$-$891$-$4416$) and KIRAN
-    ($1800$-$599$-$0019$).
+    ($1800$-$599$-$0019$)~\cite{telemanas2022}.
     No automated emergency dispatch or integration with external emergency
-    services is performed; the system surfaces information to support
-    user-initiated contact.
+    services is performed.
   \item \textbf{Conversational Neural Core:}
     Employs instruction-tuned large language models (Google Gemini~1.5 Flash
     via REST API or Mistral-7B-Instruct via HuggingFace) parameterized with 8
     turns of conversational history.
+    Response factuality, hallucination, and safety under adversarial input
+    have not been formally evaluated.
   \item \textbf{Affective Topic Classifier:}
-    Classifies statements into six stress domains: family friction, academic
+    Routes user statements into six stress domains: family friction, academic
     pressure, insomnia, panic/anxiety, social isolation, and positive
     equilibrium.
   \item \textbf{Non-Pharmacological Intervention Routing:}
-    Dynamically suggests structured somatic exercises (e.g., 4-7-8 Pranayama
-    breathwork, 5-4-3-2-1 sensory grounding) paced every 3--4 dialogue turns
-    to avoid interaction fatigue.
+    Suggests structured somatic exercises (e.g., 4-7-8 Pranayama breathwork,
+    5-4-3-2-1 sensory grounding) paced every 3--4 dialogue turns.
+    These are supportive suggestions, not clinical treatments.
 \end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{System Evaluation}
 \label{sec:eval}
 
-\subsection{Evaluation Approach}
-MindScreen is a full-stack clinical screening prototype.
+\subsection{Evaluation Scope}
+MindScreen is a full-stack screening support prototype.
 System evaluation is conducted at two levels:
-(i)~\textbf{functional correctness} of the deterministic CSO under structured
-adversarial scenarios, and
+(i)~\textbf{functional correctness} of the deterministic HRE module under
+structured masking scenarios, and
 (ii)~\textbf{operational performance} of the deployment pipeline measured by
-latency and resource consumption.
+latency and memory profiling.
+
+The evaluation does not report accuracy, macro-F1, precision, recall,
+sensitivity, specificity, AUROC, or calibration metrics for the fused
+classifier.
+No labeled test-set evaluation of depression screening performance has been
+conducted.
 Large-scale prospective evaluation against an annotated clinical corpus
 requires IRB-approved data collection and is reserved for future work
-(see Section~\ref{sec:limitations}).
+(Section~\ref{sec:limitations}).
 
-\subsection{Clinical Safety Override Verification}
-\label{sec:cso_verify}
+\subsection{HRE Rule Execution Verification}
+\label{sec:hre_verify}
 
-The primary safety property of MindScreen is that the CSO must correctly
-classify all cases in which an explicitly defined high-risk indicator is
-present, regardless of what other modalities signal.
-To verify this property, we evaluated three adversarial masking scenarios in
-which linear fusion without the CSO would produce an incorrect
-classification.
-Table~\ref{tab:safety} summarizes the results.
+The HRE module is designed to ensure that explicitly defined high-risk
+indicators are not suppressed by modality averaging.
+To verify that the implemented rule logic executes as specified, we evaluated
+three manually constructed masking scenarios (Table~\ref{tab:safety}).
+Each scenario is designed so that linear fusion without the HRE module
+produces an incorrect output, while the HRE module produces the intended
+output.
+
+These scenarios establish that the rules execute correctly for the three
+tested inputs.
+They do not establish:
+\begin{itemize}
+  \item sensitivity to all forms of suicidal ideation;
+  \item correct behavior under negation, ambiguity, code-switching, or
+    indirect expressions;
+  \item clinical utility in real patient populations; or
+  \item sufficiency of the selected indicators for crisis triage.
+\end{itemize}
 
 \begin{table}[!t]
-\caption{Safety Override Verification Under Adversarial Masking}
+\caption{HRE Rule Execution Verification: Three Masking Scenarios}
 \label{tab:safety}
 \centering
-\begin{tabular}{@{}lp{2.2cm}cc@{}}
+\begin{tabular}{@{}p{2.5cm}p{2.1cm}p{1.3cm}p{1.8cm}@{}}
 \toprule
 \textbf{Scenario} & \textbf{Input State}
-  & \textbf{Linear Fusion} & \textbf{CSO Output} \\
+  & \textbf{Fused Only} & \textbf{With HRE} \\
 \midrule
-TC-1: High PHQ-9, concealed text
-  & $S=22$, joy text, fluent voice
-  & Mild
-  & \textbf{Severe} [$c=0.90$] \\
+TC-1: High score, concealed text
+  & $S=22$, joy text, long audio
+  & Mild & Severe [$c=0.90$] \\
 TC-2: Item~9 endorsed
   & $S=3$, $q_9=1$, neutral text
-  & Minimal
-  & \textbf{Severe} [Crisis] \\
+  & Minimal & Severe [Crisis] \\
 TC-3: Crisis token in text
   & $S=2$, crisis keyword in $T$
-  & Mild
-  & \textbf{Severe} [$c=0.90$] \\
+  & Mild & Severe [$c=0.90$] \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-In TC-1, $S = 22 \ge 20$ activates \eqref{eq:cso_severe}, overriding linear
-averaging regardless of the positive emotional text and fluent speech.
-In TC-2, endorsing $q_9 = 1$ activates \eqref{eq:crisis_escalate}
-irrespective of the low total PHQ-9 score.
-In TC-3, detection of a crisis keyword in $T$ triggers the lexical override
-in the NLP branch and propagates to \eqref{eq:crisis_escalate}.
-All three cases confirm that the implemented CSO behaves deterministically as
-specified in Algorithm~\ref{alg:fusion}.
+In TC-1, $S = 22 \ge 20$ activates \eqref{eq:hre_severe}, overriding the
+fused output regardless of the positive emotional text.
+In TC-2, $q_9 = 1$ activates \eqref{eq:hre_escalate}, irrespective of
+the low total PHQ-9 score.
+In TC-3, a crisis token in $T$ activates the lexical component of
+\eqref{eq:hre_escalate}.
+All three cases confirm that the implemented HRE module behaves
+deterministically as specified in Algorithm~\ref{alg:fusion} for these inputs.
 
-The CSO demonstrates correct rule execution under the three tested conditions.
-Broader clinical validation---covering diverse patient populations, ambiguous
-presentations, and spontaneous clinical interview transcripts---is explicitly
-identified as a requirement before operational healthcare deployment
-(Section~\ref{sec:limitations}).
-
-\subsection{Latency and Cloud Resource Footprint}
+\subsection{Latency and Memory Profiling}
 \label{sec:latency}
 
+% ── Major Comment 9: tracemalloc/RSS terminology corrected ────────────────
 All latency measurements were conducted on a Render.com free-tier cloud
 container with the following configuration:
-
 \begin{itemize}
   \item \textbf{Hardware:} 0.5~vCPU, 512~MB RAM (shared cloud instance,
     x86\_64 architecture).
@@ -608,107 +781,130 @@ container with the following configuration:
     FastAPI~0.111, Uvicorn ASGI server.
   \item \textbf{Concurrency:} Single-request sequential execution;
     no concurrent load was applied.
-  \item \textbf{Runs:} Each local microservice component was timed over
-    50~invocations following a 10-call warm-up; mean and P95 values are
-    reported.
-  \item \textbf{Network latency:} Hosted-API latencies
-    (HuggingFace Inference API, Gemini REST) include round-trip network time
-    from the cloud container to the respective API endpoint; values reflect
-    measured wall-clock time.
-  \item \textbf{Memory measurement:} Peak resident set size (RSS) was captured
-    using Python's \texttt{tracemalloc} module per component invocation;
-    values represent incremental process memory above the FastAPI baseline.
+  \item \textbf{Benchmark sessions:} Three independent benchmark sessions
+    were conducted; reported values are the mean and P95 across all sessions.
+  \item \textbf{Invocations per session:} 50 invocations per component
+    following a 10-call warm-up; P95 is computed from raw per-invocation
+    observations within each session.
+  \item \textbf{Input size:} Latency was measured using a fixed 30-second
+    audio payload (${\approx}48$~kB decoded) and a 50-word text input.
+  \item \textbf{Network latency:} Hosted-API latencies (HuggingFace
+    Inference API, Gemini REST) include round-trip network time from the cloud
+    container; values reflect measured wall-clock time.
+    Measurements were conducted from the same geographic region (US-East) on
+    the same calendar day.
+  \item \textbf{Memory measurement:} Peak Python memory allocation was
+    measured using \texttt{tracemalloc} per component invocation.
+    Values represent incremental allocation above the FastAPI baseline.
+    \texttt{tracemalloc} reports Python-managed heap allocations and does
+    not capture the complete process resident set size (RSS) or memory
+    mapped by native extensions.
   \item \textbf{Acoustic model:} Edge Production Proxy \eqref{eq:acoustic_proxy}
     was used; the offline MLP \eqref{eq:acoustic_features} was not loaded.
 \end{itemize}
 
-Table~\ref{tab:latency} reports the resulting latency and memory profile.
-
 \begin{table}[!t]
-\caption{Latency and Memory Profile Across Pipeline Microservices}
+\caption{Latency and Memory Profile Across Pipeline Components
+  (Single-request benchmark; see Section~\ref{sec:latency} for conditions)}
 \label{tab:latency}
 \centering
 \begin{tabular}{@{}lccc@{}}
 \toprule
 \textbf{Pipeline Component}
   & \textbf{Mean (ms)} & \textbf{P95 (ms)}
-  & \textbf{Memory (MB)} \\
+  & \textbf{Peak Mem.\ (MB)} \\
 \midrule
 PHQ-9 Deterministic Mapping  &  1.2 &   2.4 & $<$1.0   \\
-Acoustic Energy Proxy        &  8.4 &  14.2 & $<$12.0  \\
+Acoustic Payload Heuristic   &  8.4 &  14.2 & $<$12.0  \\
 Local Lexical Rule Fallback  &  3.6 &   6.1 & $<$5.0   \\
 Hosted NLP (HF API)          & 480.0 & 1120.0 & External \\
 Gemini~1.5 Flash (Saathi)    & 390.0 &  780.0 & External \\
 \midrule
-\textbf{End-to-End Local}
+\textbf{Local End-to-End}
   & \textbf{13.2} & \textbf{22.7} & \textbf{$<$25.0} \\
-\textbf{End-to-End Cloud-Augmented}
+\textbf{Cloud-Augmented End-to-End}
   & \textbf{512.0} & \textbf{1150.0} & \textbf{$<$85.0} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Local microservice execution completes in under 25\,ms with an operating
-memory footprint under 25\,MB.
+% ── Major Comment 10: "feasibility for healthcare deployments" narrowed ────
+Local pipeline execution completes in under 25~ms with a peak Python memory
+allocation under 25~MB.
 When augmented with remote transformer inference, the full pipeline completes
-with a mean latency of 512\,ms (P95: 1{,}150\,ms, inclusive of external
-cloud network latency), fully compliant with free-tier container limits
-(512\,MB RAM).
+with a mean latency of 512~ms (P95: 1{,}150~ms, inclusive of external cloud
+network latency) under the single-request benchmark configuration.
+These measurements demonstrate the performance of the prototype components
+under the specified conditions; they do not establish feasibility for
+production healthcare deployment, concurrent-user workloads, or sustained
+operation under real clinical usage patterns.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Ethical Considerations and Limitations}
 \label{sec:limitations}
 
 \subsection{Scope and Non-Diagnostic Disclaimer}
-MindScreen is explicitly engineered as an \textbf{adjunctive preliminary
-screening and triaging tool}, not an autonomous diagnostic instrument.
-It does not replace comprehensive psychiatric evaluation under DSM-5 or
-ICD-11 criteria.
-Outputs are presented as risk indicators intended to facilitate timely
-consultation with qualified clinicians.
+MindScreen is an \textbf{adjunctive screening support prototype} and does not
+perform clinical diagnosis, replace comprehensive psychiatric evaluation under
+DSM-5 or ICD-11 criteria, or constitute a validated clinical screening or
+triage tool.
+Outputs are risk-indicator signals intended to prompt timely consultation with
+qualified clinicians.
 
-\subsection{Data Minimization and Privacy Architecture}
-In alignment with digital healthcare data governance frameworks:
+\subsection{Privacy-Oriented Implementation Mechanisms}
+The following mechanisms have been implemented; they do not constitute
+compliance with healthcare privacy regulations, which would require formal
+regulatory assessment:
 \begin{itemize}
   \item \textbf{Transient Audio Processing:}
     Voice recordings are processed in server memory as volatile byte streams;
-    no raw audio files are stored on disk or in persistent databases.
-  \item \textbf{Cryptographic Security:}
-    User records utilize bcrypt password hashing (12~rounds) and stateless
-    HS256-signed JSON Web Tokens (JWT).
+    no raw audio is stored on disk or in persistent databases.
+  \item \textbf{Cryptographic Mechanisms:}
+    User records use bcrypt hashing (12 rounds) and HS256-signed JWTs.
+    JWT expiration, token refresh, and secret-key management are handled at
+    the application level; formal security audit has not been conducted.
   \item \textbf{Keyword Feature Attribution:}
-    The system extracts influential lexical tokens from text input, providing
-    clinicians with visibility into the risk-contributing words for each
-    assessment.
+    Influential lexical tokens are surfaced to support interpretability;
+    text entries may be temporarily accessible to external NLP API providers.
 \end{itemize}
 
-\subsection{Limitations}
-Key limitations are acknowledged:
+\subsection{Acknowledged Limitations}
+\label{subsec:limitations}
 \begin{enumerate}
-  \item \textbf{Affective Proxy Mapping:}
-    The emotion-to-severity mapping routes general affective states (sadness,
-    fear) to depression risk tiers.
-    This is a clinical approximation, not a validated diagnostic mapping;
-    direct fine-tuning on labeled clinical depression corpora
-    (e.g., DAIC-WOZ, CLPsych) would substantially improve specificity.
-  \item \textbf{Acoustic Energy Proxy:}
-    Production acoustic scoring uses speech-activity energy (decoded payload
-    size) as a proxy for vocal biomarkers under cloud-container memory
-    constraints.
-    This proxy does not extract $F_0$, MFCCs, or prosodic features, and its
-    clinical sensitivity is substantially lower than full spectrogram analysis.
-  \item \textbf{No Large-Scale Clinical Validation:}
-    The framework has not been evaluated against a labeled clinical dataset
-    under controlled conditions.
-    The CSO verification covers three deliberately constructed adversarial
-    scenarios.
+  \item \textbf{No Predictive Clinical Evaluation:}
+    The framework has not been evaluated against a labeled clinical dataset.
+    No accuracy, F1, AUROC, or calibration metrics have been reported.
     Prospective clinical validation trials under IRB oversight are required
-    before formal healthcare deployment.
-  \item \textbf{Fusion Weight Justification:}
-    The weights $w_T = 0.50$, $w_A = 0.30$, $w_Q = 0.20$ were set based on
-    clinical reasoning about modality informativeness.
-    Empirical optimization via cross-validation on a held-out clinical dataset
-    is a priority for future work.
+    before any healthcare deployment.
+  \item \textbf{Heuristic Score Distributions:}
+    All modality outputs ($\mathbf{p}^Q$, $\mathbf{p}^T$, $\mathbf{p}^A$,
+    $\mathbf{p}^F$) are normalized heuristic score vectors, not calibrated
+    probability distributions.
+    The correspondence between predicted values and empirical class frequencies
+    has not been evaluated.
+  \item \textbf{Acoustic Payload Heuristic:}
+    Production acoustic analysis uses decoded audio payload size as a
+    heuristic proxy.
+    This is an engineering simplification; it does not extract $F_0$, MFCCs,
+    or prosodic features, and has not been demonstrated to provide clinically
+    meaningful acoustic information.
+  \item \textbf{Heuristic Affective Proxy Mapping:}
+    The emotion-to-severity mapping is a design approximation; direct
+    fine-tuning on labeled clinical corpora (e.g., DAIC-WOZ, CLPsych) would
+    be required for clinical meaningfulness.
+  \item \textbf{Manually Specified Fusion Weights:}
+    The weights $w_T = 0.50$, $w_A = 0.30$, $w_Q = 0.20$ reflect design
+    assumptions; empirical optimization via cross-validation on labeled
+    clinical data has not been performed.
+  \item \textbf{HRE Rule Limitations:}
+    The crisis token set uses simple string matching without negation handling,
+    context awareness, or false-positive evaluation.
+    The three verification scenarios establish rule execution, not clinical
+    sensitivity or safety.
+  \item \textbf{Saathi Safety Evaluation:}
+    Saathi's LLM responses have not been evaluated for factuality, harmful
+    content, hallucination, or unsafe behavior under adversarial or
+    ambiguous inputs.
 \end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -716,37 +912,49 @@ Key limitations are acknowledged:
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-This paper presented \textbf{MindScreen}, a tri-modal decision-level
-late-fusion architecture for depression screening and conversational triage.
-By integrating validated PHQ-9 psychometric scoring
-\eqref{eq:phq_score}--\eqref{eq:phq_probs}, transformer-based emotional text
-analysis \eqref{eq:nlp_argmax}--\eqref{eq:nlp_normalize}, and a
-speech-activity acoustic proxy \eqref{eq:acoustic_proxy}, MindScreen provides
-a multimodal risk signal that is more informationally rich than any single
-modality alone.
-The deterministic CSO \eqref{eq:cso_severe}--\eqref{eq:crisis_escalate}
-prevents dilution of explicitly defined high-risk indicators
-(PHQ-9 Item~9 endorsement $q_9 > 0$, total score $S \ge 20$, or crisis
-keyword detection) by statistical averaging; this deterministic behavior was
-verified across all three adversarial masking scenarios
-(Table~\ref{tab:safety}).
-Integration of Saathi establishes a culturally responsive conversational
-companion with crisis-resource routing and display of relevant national
-helpline information (Tele-MANAS, KIRAN).
+This paper presented \textbf{MindScreen}, a tri-modal prototype for depression
+screening support combining PHQ-9 psychometric scoring
+\eqref{eq:phq_score}--\eqref{eq:phq_probs}, a text-based heuristic affective
+classifier \eqref{eq:nlp_argmax}--\eqref{eq:nlp_normalize}, and an
+audio-payload-based production heuristic \eqref{eq:acoustic_proxy} through
+decision-level late fusion.
+% ── Moderate Comment 4: "more informationally rich" → architecture claim ──
+The architecture combines information from questionnaire, text, and
+audio-related inputs into a single decision pipeline.
+The rule-based HRE module \eqref{eq:hre_severe}--\eqref{eq:hre_escalate}
+prevents predefined high-risk indicators from being suppressed by modality
+averaging; rule execution was verified under three manually constructed
+masking scenarios (Table~\ref{tab:safety}).
+The system does not establish clinical screening accuracy, calibration, or
+clinical safety.
+Saathi provides an LLM-assisted conversational companion with crisis-resource
+routing and display of national helpline information (Tele-MANAS, KIRAN).
 
 Future work will address the following priorities:
 \begin{enumerate}
-  \item IRB-approved clinical validation trials comparing MindScreen
-    predictions against blinded Hamilton Depression Rating Scale (HAM-D)
-    evaluations on a prospective clinical cohort, enabling large-scale
-    metric reporting.
-  \item Replacement of the acoustic energy proxy with client-side WebAudio
-    WebAssembly (Wasm) implementations for zero-latency, on-device MFCC and
-    $F_0$ extraction without memory constraints.
-  \item Empirical optimization of fusion weights $w_T$, $w_A$, $w_Q$ via
-    cross-validation on annotated clinical data.
-  \item Longitudinal recurrent neural network modeling of daily mood
-    trajectories to identify early warning indicators of depressive relapse.
+  \item \textbf{Labeled clinical evaluation:}
+    IRB-approved evaluation of the full fusion pipeline against a labeled
+    clinical corpus (e.g., DAIC-WOZ, CLPsych), reporting accuracy,
+    macro-F1, AUROC, and calibration metrics for each modality and fusion
+    configuration.
+  \item \textbf{Calibration:}
+    Assessment of output calibration via expected calibration error (ECE)
+    on a held-out set, followed by a calibration procedure if required.
+  \item \textbf{Acoustic feature extraction:}
+    Replacement of the payload-size heuristic with client-side WebAudio
+    WebAssembly (Wasm) on-device MFCC and $F_0$ extraction within cloud
+    memory constraints.
+  \item \textbf{Fusion weight optimization:}
+    Empirical optimization of $w_T$, $w_A$, $w_Q$ via cross-validation on
+    labeled data, with a weight-sensitivity analysis comparing equal, modality-
+    dominant, and proposed weighting configurations.
+  \item \textbf{HRE robustness evaluation:}
+    Systematic evaluation of the keyword-matching component on positive,
+    negative, ambiguous, and indirect examples, including negation and
+    third-party reference cases.
+  \item \textbf{Saathi safety assessment:}
+    Structured test suite covering crisis and non-crisis prompts, expected
+    routing behavior, LLM fallback conditions, and human-review procedures.
 \end{enumerate}
 
 % ─────────────────────────────────────────────────────────────────────────────
