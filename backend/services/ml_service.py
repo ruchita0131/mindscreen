@@ -77,12 +77,13 @@ def _build_shap_heuristic(text: str, risk_idx: int) -> list:
 
 
 def _fallback_prediction(text: str) -> dict:
-    """Pure keyword heuristic used when HF API is unreachable."""
+    """Keyword heuristic with negation resolution used when HF API is unreachable."""
+    from services.negation_service import detect_crisis_intent
+    crisis_info = detect_crisis_intent(text)
     words = set(re.findall(r'\b[a-zA-Z]{3,}\b', text.lower()))
-    severe_kw   = {"suicide", "kill", "die", "hopeless", "worthless"}
     moderate_kw = {"depressed", "anxious", "sad", "tired", "alone", "crying"}
 
-    if any(k in words for k in severe_kw):
+    if crisis_info["is_crisis"]:
         risk, idx, conf = "severe", 3, 0.85
         probs = {"minimal": 0.05, "mild": 0.05, "moderate": 0.05, "severe": 0.85}
     elif any(k in words for k in moderate_kw):
@@ -116,10 +117,10 @@ def get_text_prediction(text: str) -> dict:
 
         risk_idx, risk_label = EMOTION_RISK_MAP.get(emotion, (0, "minimal"))
 
-        # Also check keywords — if text contains crisis words, escalate
-        words = set(re.findall(r'\b[a-zA-Z]{3,}\b', text.lower()))
-        severe_kw = {"suicide", "kill", "die", "hopeless", "worthless", "end it"}
-        if any(k in words for k in severe_kw):
+        # Check crisis intent using linguistic negation and scope resolution
+        from services.negation_service import detect_crisis_intent
+        crisis_info = detect_crisis_intent(text)
+        if crisis_info["is_crisis"]:
             risk_idx = max(risk_idx, 3)
             risk_label = "severe"
 

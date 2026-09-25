@@ -85,12 +85,14 @@ async def predict_fused(
     db.refresh(assessment)
 
     response = RiskResponse(
-        risk_level       = result["risk_level"],
-        confidence       = result["confidence"],
-        probabilities    = result["probabilities"],
-        shap_explanation = result["shap_data"],
-        crisis_flag      = crisis_flag,
-        helplines        = [
+        risk_level        = result["risk_level"],
+        confidence        = result["confidence"],
+        probabilities     = result["probabilities"],
+        raw_probabilities = result.get("raw_probabilities"),
+        shap_explanation  = result["shap_data"],
+        audio_features    = result.get("audio_features"),
+        crisis_flag       = crisis_flag,
+        helplines         = [
             "iCall: 9152987821",
             "NIMHANS: 080-46110007",
             "Vandrevala Foundation: 1860-2662-345"
