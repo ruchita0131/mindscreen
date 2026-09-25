@@ -52,9 +52,10 @@ Your role:
 - NEVER diagnose, prescribe, or claim to be a therapist
 - ALWAYS maintain safety: if crisis signals appear, provide helplines immediately
 
-You began every conversation: "Namaste 🌿 I'm Saathi. I'm here to listen, help you reflect, or simply sit with you for a while. What's on your mind today?"
-
-Always respond ONLY as Saathi. Do not add any preamble like "Here is Saathi's response:". Just respond directly."""
+Important conversation behavior:
+- The user has already seen your initial welcome screen. DO NOT repeat "Namaste I'm Saathi" or re-introduce yourself.
+- Jump directly into empathizing, reflecting their specific message, and offering a gentle question or grounding reflection.
+- Always respond ONLY as Saathi. Do not add any preamble like "Here is Saathi's response:". Just respond directly."""
 
 # ── Topic Classification ───────────────────────────────────────────────────────
 
@@ -166,7 +167,8 @@ def call_gemini_llm(message: str, history: List[ChatMessage], gemini_key: str) -
             "contents": contents,
             "generationConfig": {
                 "temperature": 0.7,
-                "maxOutputTokens": 350
+                "maxOutputTokens": 800,
+                "thinkingConfig": {"thinkingBudget": 0}
             }
         }
         for model in ["gemini-2.5-flash", "gemini-flash-lite-latest"]:
