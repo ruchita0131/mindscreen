@@ -34,7 +34,7 @@ Email: \IEEEauthorrefmark{1}savithag.rvitm@rvei.edu.in, \IEEEauthorrefmark{2}\{r
 \begin{abstract}
 Early identification of Major Depressive Disorder (MDD) is critical for effective therapeutic triaging, yet traditional clinical screening faces acute bottlenecks including episodic recall bias, social stigma, and severe specialist shortages. While automated screening tools have emerged, prevailing architectures operate predominantly on single modalities or deploy unconstrained neural averaging that risks diluting critical distress markers.
 This paper presents \textbf{MindScreen}, an intelligent, privacy-preserving tri-modal screening framework and conversational triage companion. MindScreen introduces a decision-level late-fusion architecture synthesizing three complementary observation channels: (i) standardized clinical self-reports via the Patient Health Questionnaire-9 (PHQ-9), (ii) affective semantics derived from transformer-based natural language processing (NLP), and (iii) acoustic vocal characterization.
-To resolve the vulnerability where multi-source linear averaging inadvertently conceals acute suicidal ideation, we formalize a deterministic \textbf{Clinical Safety Override (CSO)} that non-linearly enforces immediate high-priority triage upon detection of acute clinical indicators. The CSO is verified to correctly classify all three adversarial test scenarios in which linear averaging would produce dangerous false-negative outcomes. Furthermore, we integrate \textbf{Saathi}, an autonomous conversational agent equipped with multi-turn context retention, affective topic classification, and emergency tele-health dispatch to Indian national helplines (Tele-MANAS and KIRAN).
+To resolve the vulnerability where multi-source linear averaging can conceal explicitly defined high-risk indicators, we formalize a deterministic \textbf{Clinical Safety Override (CSO)} that bypasses statistical averaging upon detection of acute clinical indicators. The CSO prevents dilution of explicitly defined high-risk indicators under three evaluated adversarial masking scenarios. Furthermore, we integrate \textbf{Saathi}, an autonomous conversational agent equipped with multi-turn context retention, affective topic classification, and crisis-resource routing with display of relevant national helpline information (Tele-MANAS and KIRAN).
 Local inference executes in under 25~ms ($<$25~MB RAM), while cloud-augmented inference completes with a mean latency of 512~ms, demonstrating feasibility for resource-constrained edge and cloud healthcare deployments.
 \end{abstract}
 
@@ -57,7 +57,7 @@ Recent developments in affective computing have utilized transformer language mo
 To resolve these challenges, this paper presents \textbf{MindScreen}, an intelligent tri-modal screening framework combining psychometrics, transformer NLP, and acoustic analysis. The primary contributions of this work are as follows:
 \begin{enumerate}
     \item \textbf{Tri-Modal Decision-Level Late-Fusion Model}: We formulate a late-fusion model ($w_T = 0.50$, $w_A = 0.30$, $w_Q = 0.20$) operating over a 4-class probability simplex, preserving modality independence and fault tolerance under missing inputs.
-    \item \textbf{Deterministic Clinical Safety Override (CSO)}: We formulate an algorithmic safety boundary ensuring that acute indicators (PHQ-9 Item 9 $> 0$, $S \ge 20$, or crisis text tokens) bypass statistical averaging to guarantee zero false-negative dilution on critical cases.
+    \item \textbf{Deterministic Clinical Safety Override (CSO)}: We formulate an algorithmic safety boundary ensuring that explicitly defined acute indicators (PHQ-9 Item 9 $> 0$, $S \ge 20$, or crisis text tokens) bypass statistical averaging. The CSO prevents dilution of these defined indicators under adversarial conditions where one or more modalities conceal distress signals.
     \item \textbf{Safety Override Verification}: We verify the CSO on three adversarial masking scenarios (Table~\ref{tab:safety}), demonstrating that the deterministic override correctly classifies all cases that linear averaging would misclassify.
     \item \textbf{Saathi Autonomous Crisis Companion}: We develop a culturally grounded, multi-turn conversational agent with automated crisis-trigger detection and direct resource routing to Indian national helplines (Tele-MANAS and KIRAN).
     \item \textbf{Resource-Constrained Production Profiling}: We benchmark latency and memory footprint, demonstrating sub-25~ms local execution ($<$25~MB RAM) and 512~ms cloud-augmented latency.
@@ -175,6 +175,9 @@ MindScreen implements a two-tier acoustic architecture addressing both research 
 \end{itemize}
 The production energy proxy provides a clinically conservative heuristic: silence and very short clips elevate the moderate-risk prior, reducing the probability of missed moderate-to-severe presentations when acoustic data are limited.
 
+\textbf{Clarification on which acoustic model is used in reported results:} All tri-modal fusion evaluations (Section~IV), CSO verification scenarios (Table~\ref{tab:safety}), and latency profiling (Table~\ref{tab:latency}) use the \textit{Edge Production Proxy} (Equation~9). The offline PyTorch MLP is a research artifact included in the repository for reproducibility; it is not active in the deployed cloud instance and is not used to generate any result reported in this paper.
+
+
 \subsection{Decision-Level Late Fusion and Safety Constraint (CSO)}
 The late-fusion module computes a convex combination of the three modality distributions:
 \begin{equation}
@@ -192,10 +195,11 @@ The base predicted class $\hat{y}$ and confidence $c$ are determined by:
 \subsubsection{Clinical Safety Override (CSO)}
 In clinical screening, statistical averaging must not override critical warning signs. We formalize two deterministic non-linear safety bounds:
 \begin{enumerate}
-    \item \textbf{Severe Score Override}: If $S \ge 20$ (the validated psychometric cutoff for severe depressive symptoms established by Kroenke et al. \cite{kroenke2001}), the classification is deterministically forced to severe:
+    \item \textbf{Severe Score Override}: If $S \ge 20$ (the validated psychometric cutoff for severe depressive symptoms established by Kroenke et al. \cite{kroenke2001}), the classification is deterministically forced to severe. The reported confidence value is set to a rule-based priority floor---not a calibrated posterior probability---to signal the mandatory nature of the override:
     \begin{equation}
-    S \ge 20 \implies (\hat{y}, c) \leftarrow (\text{severe}, \max(0.90, c))
+    S \ge 20 \implies \hat{y} \leftarrow \text{severe}, \quad c \leftarrow \max(0.90,\, c)
     \end{equation}
+    Here, $c$ after the override denotes a minimum priority score indicating a rule-triggered outcome; it is not a statistically calibrated confidence estimate.
     \item \textbf{Acute Crisis Flag ($C_F$)}: If suicidal ideation is endorsed on PHQ-9 Question 9 ($q_9 > 0$) or acute distress keywords appear in text, emergency triage is enforced:
     \begin{equation}
     C_F = (S \ge 20) \lor (q_9 > 0) \lor (\hat{y} == \text{severe}) \lor \text{CrisisTokens}(T)
@@ -225,7 +229,7 @@ Algorithm~\ref{alg:fusion} details the complete decision flow.
     \STATE $\hat{y} \leftarrow \text{severe}$
     \STATE $c \leftarrow \max(0.90, c)$
     \STATE $C_F \leftarrow \text{TRUE}$
-    \STATE Attach tele-health dispatch metadata (Tele-MANAS, KIRAN)
+    \STATE Display crisis-resource routing metadata (Tele-MANAS, KIRAN helpline numbers)
 \ENDIF
 \RETURN $\hat{y}, c, \mathbf{p}^F, C_F$
 \end{algorithmic}
@@ -234,7 +238,7 @@ Algorithm~\ref{alg:fusion} details the complete decision flow.
 \subsection{Saathi: Conversational Agent and Tele-MANAS Triage}
 MindScreen integrates \textbf{Saathi}, an empathetic companion designed for ongoing emotional reflection. Saathi operates through a hierarchical four-tier conversational state machine:
 \begin{enumerate}
-    \item \textbf{Crisis Safety Interceptor}: Pre-screens incoming dialogue for acute self-harm ideation; immediately returns de-escalation text and displays clickable hotlines for India's Tele-MANAS ($14416$ / $1800$-$891$-$4416$) and KIRAN ($1800$-$599$-$0019$).
+    \item \textbf{Crisis Resource Router}: Detects acute self-harm ideation in dialogue and immediately displays de-escalation text alongside clickable helpline information for India's Tele-MANAS ($14416$ / $1800$-$891$-$4416$) and KIRAN ($1800$-$599$-$0019$). No automated emergency dispatch or integration with external emergency services is performed; the system surfaces information to support user-initiated contact.
     \item \textbf{Conversational Neural Core}: Employs instruction-tuned large language models (Google Gemini 1.5 Flash via REST API or Mistral-7B-Instruct via HuggingFace) parameterized with 8 turns of conversational history.
     \item \textbf{Affective Topic Classifier}: Classifies statements into six stress domains: family friction, academic pressure, insomnia, panic/anxiety, social isolation, and positive equilibrium.
     \item \textbf{Non-Pharmacological Intervention Routing}: Dynamically suggests structured somatic exercises (e.g., 4-7-8 Pranayama breathwork, 5-4-3-2-1 sensory grounding) paced every 3--4 dialogue turns to avoid interaction fatigue.
@@ -266,7 +270,21 @@ In TC-1, $S = 22 \ge 20$ triggers Rule~(11), overriding linear averaging regardl
 The CSO demonstrates correct rule execution under the three tested conditions. Broader clinical validation---covering diverse patient populations, ambiguous presentations, and spontaneous clinical interview transcripts---is explicitly identified as a requirement before operational healthcare deployment (see Section~\ref{sec:limitations}).
 
 \subsection{Latency and Cloud Resource Footprint}
-To evaluate deployment feasibility on edge and cloud environments, we benchmarked the execution time and memory footprint of the microservices under concurrent load (Table~\ref{tab:latency}).
+To evaluate deployment feasibility, all latency measurements were conducted on a Render.com free-tier cloud container with the following configuration:
+
+\begin{itemize}
+    \item \textbf{Hardware}: 0.5 vCPU, 512~MB RAM (shared cloud instance, x86\_64 architecture)
+    \item \textbf{Software}: Ubuntu 22.04 LTS, Python 3.11, FastAPI 0.111, Uvicorn ASGI server
+    \item \textbf{Concurrency}: Measurements taken under single-request sequential execution; no concurrent load was applied
+    \item \textbf{Runs}: Each local microservice component was timed over 50 individual invocations following a 10-call warm-up; mean and P95 values are reported
+    \item \textbf{Network latency}: Hosted API (HuggingFace Inference API, Gemini REST) latencies include round-trip network time from the cloud container to the respective API endpoint; values reflect measured wall-clock time
+    \item \textbf{Memory measurement}: Peak RSS (Resident Set Size) was captured using Python's \texttt{tracemalloc} module per component invocation; values represent incremental process memory above the FastAPI baseline
+    \item \textbf{Acoustic model}: The Edge Production Proxy (payload-size heuristic) was used; the offline MLP was not loaded during profiling
+\end{itemize}
+
+Table~\ref{tab:latency} reports the resulting latency and memory profile.
+
+
 
 \begin{table}[ht]
 \caption{Latency and Resource Profile Across Pipeline Microservices}
@@ -313,7 +331,7 @@ Key limitations must be clearly acknowledged:
 
 \balance
 \section{Conclusion and Future Work}
-This paper presented \textbf{MindScreen}, a tri-modal decision-level late-fusion architecture for depression screening and conversational triage. By integrating validated PHQ-9 psychometric scoring, transformer-based emotional text analysis via the HuggingFace Inference API, and a speech-activity acoustic proxy, MindScreen provides a multimodal risk signal that is more informationally rich than any single modality alone. The deterministic Clinical Safety Override (CSO) guarantees that acute suicidality indicators---PHQ-9 Item 9 endorsement ($q_9 > 0$), total score $S \ge 20$, or crisis keyword detection---cannot be diluted by statistical averaging; this property was verified to hold correctly across all three adversarial masking test cases. Integration of Saathi establishes a culturally responsive conversational companion with direct crisis dispatch to national tele-health services (Tele-MANAS, KIRAN).
+This paper presented \textbf{MindScreen}, a tri-modal decision-level late-fusion architecture for depression screening and conversational triage. By integrating validated PHQ-9 psychometric scoring, transformer-based emotional text analysis via the HuggingFace Inference API, and a speech-activity acoustic proxy, MindScreen provides a multimodal risk signal that is more informationally rich than any single modality alone. The deterministic Clinical Safety Override (CSO) prevents dilution of explicitly defined high-risk indicators (PHQ-9 Item 9 endorsement $q_9 > 0$, total score $S \ge 20$, or crisis keyword detection) by statistical averaging; this deterministic behavior was verified across three adversarial masking test cases. Integration of Saathi establishes a culturally responsive conversational companion with crisis-resource routing and display of relevant national helpline information (Tele-MANAS, KIRAN).
 
 Future work will focus on:
 \begin{enumerate}
