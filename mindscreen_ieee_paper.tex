@@ -497,13 +497,13 @@ In TC-3, affirmative crisis text overrides low questionnaire scores.
 \midrule
 TC-1: High score masked by positive text
   & $S=22$, joy text, long audio
-  & Mild ($c_1$) & \textbf{High-priority ($c_3$)} [$c_{\text{out}}=0.90$] \\
+  & Mild ($c_1$) & \textbf{High-priority ($c_3$)} [$c_{\text{out}}=0.90, R_D=\text{T}$] \\
 TC-2: Item~9 endorsed, low total score
   & $S=3$, $q_9=1$, neutral text
-  & Minimal ($c_0$) & \textbf{High-priority ($c_3$)} [$C_F=\text{T}$] \\
+  & Minimal ($c_0$) & \textbf{High-priority ($c_3$)} [$C_F=\text{T}, c_{\text{out}}=0.90$] \\
 TC-3: Crisis keyword, low PHQ-9
   & $S=2$, ``hopeless'' in text
-  & Mild ($c_1$) & \textbf{High-priority ($c_3$)} [$c_{\text{out}}=0.90$] \\
+  & Mild ($c_1$) & \textbf{High-priority ($c_3$)} [$C_F=\text{T}, c_{\text{out}}=0.90$] \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -513,8 +513,8 @@ anti-dilution behavior of the HRE module, we conducted an empirical sensitivity
 analysis across five weighting configurations: Equal (33/33/33), Text-Dominant
 (60/20/20), Audio-Dominant (20/60/20), Questionnaire-Dominant (20/20/60), and
 MindScreen (50/30/20).
-Under concordant severe and minimal profiles, all five schemes converged
-consistently (severe: $0.56$--$0.75$, minimal: $0.65$--$0.80$).
+Under concordant high symptom burden and minimal profiles, all five schemes converged
+consistently (high symptom burden: $0.56$--$0.75$, minimal: $0.65$--$0.80$).
 Under masked affect ($S=20$, positive text), all linear schemes assigned
 minimal or mild categories ($0.37$--$0.60$ score), and were rescued only by the
 deterministic HRE override.
@@ -617,7 +617,7 @@ Overall Disambiguation Accuracy & 42.9\% (6/14) & \textbf{100.0\% (14/14)} \\
 
 All measurements were taken on a production cloud container
 (0.5~vCPU, 512~MB RAM, Ubuntu 22.04, Python 3.11, FastAPI 0.111) under
-sequential single-request load.
+sequential single-request load (Table~\ref{tab:latency}).
 Each local component was timed over 50 invocations after a 10-call warm-up;
 P95 is computed from raw per-invocation observations.
 Hosted-API latencies include network round-trip time.
