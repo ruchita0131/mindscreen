@@ -1,6 +1,7 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[10pt, conference, letterpaper]{IEEEtran}
 \IEEEoverridecommandlockouts
 
+\usepackage{times}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithm}
@@ -12,6 +13,10 @@
 \usepackage{url}
 \usepackage{microtype}
 \usepackage{balance}
+
+% Enforce exact IEEE conference layout parameters
+\setlength{\columnsep}{0.17in}
+\setlength{\parindent}{3.5mm}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -29,13 +34,16 @@
   Shravya Sanikere\IEEEauthorrefmark{2},
   Chandrika Lamani\IEEEauthorrefmark{2},
   Apoorva K\IEEEauthorrefmark{2}}
-\IEEEauthorblockA{Dept.\ of Computer Science and Engineering,
-  RV Institute of Technology and Management, Bengaluru, India\\
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science and Engineering,
+  RV Institute of Technology and Management, Bengaluru, India}\\
+  \footnotesize
   \IEEEauthorrefmark{1}savithag.rvitm@rvei.edu.in \quad
   \IEEEauthorrefmark{2}\{ruchitasaraf9, shravya.sanikere,
     chandrika.lamani, apoorva.k\}@gmail.com}}
 
 \maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \begin{abstract}
@@ -232,7 +240,7 @@ must not be conflated with the formal clinical cutoff for severe depression
 
 \subsection{Modality Processing Pipelines}
 
-\subsubsection{PHQ-9 Branch ($\mathbf{p}^Q$)}
+\subsubsection{PHQ-9 branch ($\mathbf{p}^Q$)}
 The aggregate score $S = \sum_{i=1}^{9} q_i$ is mapped to a fixed 4-class
 score vector via a piecewise function $\Phi_Q$:
 \begin{equation}
@@ -255,7 +263,7 @@ different scores within the same interval receive the same questionnaire
 branch vector. This design choice prioritizes deterministic implementation
 and interpretability over fine-grained score calibration.
 
-\subsubsection{NLP Text Branch ($\mathbf{p}^T$)}
+\subsubsection{NLP text branch ($\mathbf{p}^T$)}
 Free-text input $T$ is classified by \textit{j-hartmann/emotion-english-distilroberta-base}~\cite{hartmann2022},
 accessed via the HuggingFace Inference API.
 The top emotion class $e^*$ and its maximum model output score $s$ are extracted:
@@ -302,7 +310,7 @@ When the HuggingFace API is unreachable or times out, a deterministic keyword-ru
 fallback maintains software-level service continuity; this heuristic fallback
 provides operational availability rather than equivalent transformer classification fidelity.
 
-\subsubsection{Audio Branch ($\mathbf{p}^A$)}
+\subsubsection{Audio branch ($\mathbf{p}^A$)}
 To bypass the memory constraints of hosting heavy acoustic libraries
 (such as PyTorch and Librosa exceeding 512~MB RAM) on cloud containers,
 MindScreen offloads signal extraction to the client browser via the standard
@@ -835,15 +843,15 @@ G.~Gururaj \textit{et al.},
 ``National Mental Health Survey of India, 2015--16,''
 \textit{NIMHANS Publication}, no.~129, 2016.
 
+\bibitem{kessler2003}
+R.~C.~Kessler \textit{et al.},
+``Screening for serious mental illness in the general population,''
+\textit{Arch.\ Gen.\ Psychiatry}, vol.~60, no.~2, pp.~184--189, 2003.
+
 \bibitem{kroenke2001}
 K.~Kroenke, R.~L.~Spitzer, and J.~B.~W.~Williams,
 ``The PHQ-9: Validity of a brief depression severity measure,''
 \textit{J.\ Gen.\ Intern.\ Med.}, vol.~16, no.~9, pp.~606--613, 2001.
-
-\bibitem{cummins2015}
-N.~Cummins \textit{et al.},
-``A review of depression and suicide risk assessment using speech analysis,''
-\textit{Speech Commun.}, vol.~71, pp.~10--49, 2015.
 
 \bibitem{ji2022}
 S.~Ji \textit{et al.},
@@ -856,16 +864,38 @@ X.~Xu \textit{et al.},
 ``Mental-LLM: Leveraging large language models for mental health prediction,''
 in \textit{Proc.\ ACL}, 2024, pp.~5120--5135.
 
+\bibitem{cummins2015}
+N.~Cummins \textit{et al.},
+``A review of depression and suicide risk assessment using speech analysis,''
+\textit{Speech Commun.}, vol.~71, pp.~10--49, 2015.
+
+\bibitem{scherer2013}
+S.~Scherer \textit{et al.},
+``Automatic behavior descriptors for psychological disorder analysis,''
+in \textit{Proc.\ IEEE FG}, 2013, pp.~1--8.
+
 \bibitem{yang2023}
 L.~Yang, D.~Jiang, and E.~Cambria,
 ``A survey on multimodal depression detection,''
 \textit{IEEE Trans.\ Affect.\ Comput.}, vol.~14, no.~4,
 pp.~3125--3144, 2023.
 
-\bibitem{scherer2013}
-S.~Scherer \textit{et al.},
-``Automatic behavior descriptors for psychological disorder analysis,''
-in \textit{Proc.\ IEEE FG}, 2013, pp.~1--8.
+\bibitem{ringeval2019}
+F.~Ringeval \textit{et al.},
+``AVEC 2019 workshop and challenge,''
+in \textit{Proc.\ ACM MM Workshop}, 2019, pp.~3--12.
+
+\bibitem{devault2014}
+T.~DeVault \textit{et al.},
+``SimSensei Kiosk: A virtual human interviewer for healthcare decision
+support,''
+in \textit{Proc.\ AAMAS}, 2014, pp.~1061--1068.
+
+\bibitem{fitzpatrick2017}
+K.~K.~Fitzpatrick, A.~Darcy, and M.~Vierhile,
+``Delivering cognitive behavior therapy to young adults with symptoms of
+depression and anxiety using a fully automated conversational agent (Woebot),''
+\textit{JMIR Ment.\ Health}, vol.~4, no.~2, p.~e19, 2017.
 
 \bibitem{hartmann2022}
 J.~Hartmann,
@@ -874,27 +904,10 @@ HuggingFace Model Hub, 2022.
 [Online]. Available:
 \url{https://huggingface.co/j-hartmann/emotion-english-distilroberta-base}
 
-\bibitem{kessler2003}
-R.~C.~Kessler \textit{et al.},
-``Screening for serious mental illness in the general population,''
-\textit{Arch.\ Gen.\ Psychiatry}, vol.~60, no.~2, pp.~184--189, 2003.
-
-\bibitem{fitzpatrick2017}
-K.~K.~Fitzpatrick, A.~Darcy, and M.~Vierhile,
-``Delivering cognitive behavior therapy to young adults with symptoms of
-depression and anxiety using a fully automated conversational agent (Woebot),''
-\textit{JMIR Ment.\ Health}, vol.~4, no.~2, p.~e19, 2017.
-
-\bibitem{devault2014}
-T.~DeVault \textit{et al.},
-``SimSensei Kiosk: A virtual human interviewer for healthcare decision
-support,''
-in \textit{Proc.\ AAMAS}, 2014, pp.~1061--1068.
-
-\bibitem{ringeval2019}
-F.~Ringeval \textit{et al.},
-``AVEC 2019 workshop and challenge,''
-in \textit{Proc.\ ACM MM Workshop}, 2019, pp.~3--12.
+\bibitem{guo2017}
+C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q.~Weinberger,
+``On calibration of modern neural networks,''
+in \textit{Proc.\ ICML}, 2017, pp.~1321--1330.
 
 \bibitem{telemanas2022}
 Ministry of Health and Family Welfare, Government of India,
@@ -907,11 +920,6 @@ Ministry of Social Justice and Empowerment, Government of India,
 ``KIRAN: 24/7 Mental Health Rehabilitation Helpline,''
 2020.
 [Online]. Available: \url{http://disabilityaffairs.gov.in}
-
-\bibitem{guo2017}
-C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q.~Weinberger,
-``On calibration of modern neural networks,''
-in \textit{Proc.\ ICML}, 2017, pp.~1321--1330.
 
 \end{thebibliography}
 
