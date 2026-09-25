@@ -149,11 +149,10 @@ Within the systems and descriptions reviewed for this study, we did not identify
 an explicitly documented deterministic high-risk override mechanism matching the
 HRE design used in MindScreen.
 
-\begin{table}[!t]
+\begin{table*}[!t]
 \caption{Comparison of Related Mental Health Screening Systems}
 \label{tab:related}
 \centering
-\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{System} & \textbf{Modalities}
@@ -166,17 +165,17 @@ AVEC~\cite{ringeval2019}             & Text+V+A   & Early/mid  & No     & Benchm
 Cummins~et~al.~\cite{cummins2015}   & Audio      & —          & No     & Research pipeline \\
 \textbf{MindScreen (this work)}      & \textbf{PHQ+Text+A} & \textbf{Late} & \textbf{Yes} & \textbf{Cloud prototype} \\
 \bottomrule
-\end{tabular}%
-}
+\end{tabular}
 \vspace{1ex}
-\parbox{\columnwidth}{\footnotesize \textit{Note:} The systems listed in
+
+\parbox{0.90\textwidth}{\footnotesize \textit{Note:} The systems listed in
 Table~\ref{tab:related} are not directly comparable in terms of task definition,
 target population, clinical dataset, deployment status, or evaluation protocol;
 the table is intended to provide architectural context rather than a controlled
 performance comparison. The MindScreen prototype was evaluated in a cloud-hosted
 container; this technical hosting status should not be interpreted as clinical,
 public-health, or production deployment.}
-\end{table}
+\end{table*}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{System Architecture}
@@ -214,6 +213,7 @@ must not be conflated with the formal clinical cutoff for severe depression
 \caption{PHQ-9 Score to MindScreen Internal Screening Tier Mapping}
 \label{tab:phq_map}
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}clll@{}}
 \toprule
 \textbf{Score $S$} & \textbf{PHQ-9 Band~\cite{kroenke2001}} & \textbf{Internal Tier ($\hat{y}$)}
@@ -223,10 +223,11 @@ must not be conflated with the formal clinical cutoff for severe depression
 5--9   & Mild              & $c_1$ (Mild)          & Wellness exercises \\
 10--14 & Moderate          & $c_2$ (Moderate)      & Recommend consultation \\
 15--19 & Moderately severe & \multirow{2}{*}{$c_3$ (High-priority)}
-  & \multirow{2}{*}{\parbox{2.8cm}{Professional referral;\\display helplines ($R_D$)}} \\
+  & \multirow{2}{*}{\parbox{2.6cm}{\raggedright Professional referral;\\display helplines ($R_D$)}} \\
 20--27 & Severe            &          & \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Modality Processing Pipelines}
@@ -456,7 +457,8 @@ Table~\ref{tab:hre} enumerates the complete HRE decision matrix.
 \caption{HRE Module: Complete Decision Matrix}
 \label{tab:hre}
 \centering
-\begin{tabular}{@{}p{3.0cm}cccc@{}}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{Trigger Condition} & $\hat{y}$ & $C_F$ & $R_D$ & $c_{\text{out}}$ \\
 \midrule
@@ -468,7 +470,8 @@ Fused $\hat{y} = c_3$ alone& $c_3$ & F & T & $s_F$ \\
 Multiple triggers          & $c_3$ & T & T & $\max(0.90, s_F)$ \\
 \bottomrule
 \multicolumn{5}{@{}l}{\footnotesize $^\dagger C_F$ remains FALSE unless Item 9 or crisis language is also present.}
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Algorithm~\ref{alg:fusion} gives the complete inference flow.
@@ -477,34 +480,20 @@ Algorithm~\ref{alg:fusion} gives the complete inference flow.
 \caption{MindScreen Tri-Modal Inference with HRE}
 \label{alg:fusion}
 \begin{algorithmic}[1]
-\REQUIRE Responses $\mathbf{q} \in \{0,1,2,3\}^9$, text $T$, audio features $\mathbf{f} \in [0,1]^6$
-\ENSURE Internal tier $\hat{y}$, priority score $c_{\text{out}}$, crisis flag $C_F$, resource flag $R_D$
+\REQUIRE $\mathbf{q} \in \{0,1,2,3\}^9$, text $T$, audio features $\mathbf{f} \in [0,1]^6$
+\ENSURE Tier $\hat{y}$, score $c_{\text{out}}$, crisis flag $C_F$, resource flag $R_D$
 \STATE $\mathbf{p}^Q \leftarrow \Phi_Q\!\left(\sum_{i=1}^9 q_i\right)$
-  \hfill $\triangleright$ \eqref{eq:phq_probs}
-\STATE $\mathbf{p}^T \leftarrow \text{NLP}(T)$;
-  $\;\mathbf{p}^A \leftarrow \text{Audio}(\mathbf{f})$
-  \hfill $\triangleright$ \eqref{eq:nlp_argmax}--\eqref{eq:acoustic_index}
-\STATE $\mathbf{p}^F \leftarrow
-  0.50\,\mathbf{p}^T + 0.30\,\mathbf{p}^A + 0.20\,\mathbf{p}^Q$
-  \hfill $\triangleright$ \eqref{eq:fusion}
-\STATE Compute score-softened vector $\mathbf{p}^{\text{soft}}$ via \eqref{eq:temperature} ($T=1.20$)
-\STATE $\hat{y} \leftarrow \arg\max_k p_k^{\text{soft}}$;\;
-  $s_F \leftarrow \max_k p_k^{\text{soft}}$;\;
-  $c_{\text{out}} \leftarrow s_F$
-\STATE $C_F \leftarrow \text{FALSE}$;\;
-  $R_D \leftarrow (\hat{y} == c_3)$
+\STATE $\mathbf{p}^T \leftarrow \text{NLP}(T)$;\; $\mathbf{p}^A \leftarrow \text{Audio}(\mathbf{f})$
+\STATE $\mathbf{p}^F \leftarrow 0.50\,\mathbf{p}^T + 0.30\,\mathbf{p}^A + 0.20\,\mathbf{p}^Q$
+\STATE Compute softened vector $\mathbf{p}^{\text{soft}}$ via \eqref{eq:temperature} ($T=1.20$)
+\STATE $\hat{y} \leftarrow \arg\max_k p_k^{\text{soft}}$;\; $s_F \leftarrow \max_k p_k^{\text{soft}}$;\; $c_{\text{out}} \leftarrow s_F$
+\STATE $C_F \leftarrow \text{FALSE}$;\; $R_D \leftarrow (\hat{y} == c_3)$
 \IF{$S \ge 20$}
-  \STATE $\hat{y} \leftarrow c_3$;\;
-    $c_{\text{out}} \leftarrow \max(0.90, c_{\text{out}})$;\;
-    $R_D \leftarrow \text{TRUE}$
-  \hfill $\triangleright$ Rule 1 \eqref{eq:hre_severe}
+  \STATE $\hat{y} \leftarrow c_3$;\; $c_{\text{out}} \leftarrow \max(0.90, c_{\text{out}})$;\; $R_D \leftarrow \text{TRUE}$
 \ENDIF
 \IF{$q_9 > 0 \lor \text{CrisisIntent}(T)$}
-  \STATE $\hat{y} \leftarrow c_3$;\;
-    $c_{\text{out}} \leftarrow \max(0.90, c_{\text{out}})$;\;
-    $C_F \leftarrow \text{TRUE}$;\;
-    $R_D \leftarrow \text{TRUE}$
-  \hfill $\triangleright$ Rule 2 \eqref{eq:hre_escalate}
+  \STATE $\hat{y} \leftarrow c_3$;\; $c_{\text{out}} \leftarrow \max(0.90, c_{\text{out}})$
+  \STATE $C_F \leftarrow \text{TRUE}$;\; $R_D \leftarrow \text{TRUE}$
 \ENDIF
 \RETURN $\hat{y},\; c_{\text{out}},\; C_F,\; R_D$
 \end{algorithmic}
@@ -578,22 +567,24 @@ In TC-3, affirmative crisis text overrides low questionnaire scores.
 \caption{HRE Verification: Adversarial Masking Scenarios}
 \label{tab:hre_verify}
 \centering
-\begin{tabular}{@{}p{2.2cm}p{2.0cm}cc@{}}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}p{2.6cm}p{2.2cm}cc@{}}
 \toprule
 \textbf{Scenario} & \textbf{Signal State}
   & \textbf{Fused Only} & \textbf{With HRE} \\
 \midrule
-TC-1: High score masked by positive text
-  & $S=22$, joy text, long audio
-  & Mild ($c_1$) & \textbf{High-priority ($c_3$)} [$c_{\text{out}}=0.90, R_D=\text{T}$] \\
-TC-2: Item~9 endorsed, low total score
-  & $S=3$, $q_9=1$, neutral text
-  & Minimal ($c_0$) & \textbf{High-priority ($c_3$)} [$C_F=\text{T}, c_{\text{out}}=0.90$] \\
-TC-3: Crisis keyword, low PHQ-9
-  & $S=2$, ``hopeless'' in text
-  & Mild ($c_1$) & \textbf{High-priority ($c_3$)} [$C_F=\text{T}, c_{\text{out}}=0.90$] \\
+TC-1: Masked high score
+  & $S=22$, joy text, active audio
+  & Mild ($c_1$) & \textbf{$c_3$} [$c_{\text{out}}\!=\!0.90, R_D$] \\
+TC-2: Item~9 endorsed
+  & $S=3, q_9=1$, neutral text
+  & Minimal ($c_0$) & \textbf{$c_3$} [$c_{\text{out}}\!=\!0.90, C_F, R_D$] \\
+TC-3: Crisis keyword
+  & $S=2$, ``hopeless'' text
+  & Mild ($c_1$) & \textbf{$c_3$} [$c_{\text{out}}\!=\!0.90, C_F, R_D$] \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 These scenarios verify the intended execution of the deterministic HRE rules
@@ -629,23 +620,23 @@ The scores reported in Table~\ref{tab:ablation} represent the maximum convex fus
 score ($s_F$) before deterministic HRE escalation. The corresponding HRE output
 is shown separately using the notation $c_3^*$. All values are rounded to two decimal places.
 
-\begin{table}[!t]
+\begin{table*}[!t]
 \caption{Modality Weight Sensitivity and Anti-Dilution Analysis}
 \label{tab:ablation}
 \centering
 \begin{tabular}{@{}lccccc@{}}
 \toprule
-\textbf{Constructed Profile} & \textbf{Equal} & \textbf{Text-Dom} & \textbf{Audio-Dom} & \textbf{PHQ-Dom} & \textbf{MindScreen} \\
+\textbf{Constructed Profile} & \textbf{Equal (33/33/33)} & \textbf{Text-Dom (60/20/20)} & \textbf{Audio-Dom (20/60/20)} & \textbf{PHQ-Dom (20/20/60)} & \textbf{MindScreen (50/30/20)} \\
 \midrule
 P1: High Symptom Burden ($S \ge 20$) & $0.68 \to c_3^*$ & $0.75 \to c_3^*$ & $0.56 \to c_3^*$ & $0.73 \to c_3^*$ & $0.70 \to c_3^*$ \\
-P2: Concordant Minimal& $0.74$           & $0.80$           & $0.65$           & $0.76$           & $0.77$           \\
-P3: Masked Affect     & $0.41 \to c_3^*$ & $0.60 \to c_3^*$ & $0.37 \to c_3^*$ & $0.49 \to c_3^*$ & $0.55 \to c_3^*$ \\
-P4: Somatic Flatness  & $0.34$           & $0.57$           & $0.30$           & $0.45$           & $0.48$           \\
-P5: Implicit Ideation & $0.36 \to c_3^*$ & $0.49 \to c_3^*$ & $0.35 \to c_3^*$ & $0.53 \to c_3^*$ & $0.46 \to c_3^*$ \\
+P2: Concordant Minimal               & $0.74$           & $0.80$           & $0.65$           & $0.76$           & $0.77$           \\
+P3: Masked Affect                    & $0.41 \to c_3^*$ & $0.60 \to c_3^*$ & $0.37 \to c_3^*$ & $0.49 \to c_3^*$ & $0.55 \to c_3^*$ \\
+P4: Somatic Flatness                 & $0.34$           & $0.57$           & $0.30$           & $0.45$           & $0.48$           \\
+P5: Implicit Ideation                & $0.36 \to c_3^*$ & $0.49 \to c_3^*$ & $0.35 \to c_3^*$ & $0.53 \to c_3^*$ & $0.46 \to c_3^*$ \\
 \bottomrule
 \multicolumn{6}{@{}l}{\footnotesize $^*$Escalated to internal high-priority tier ($c_3$) by HRE deterministic bound ($c_{\text{out}} \leftarrow \max(0.90, s_F)$).}
 \end{tabular}
-\end{table}
+\end{table*}
 
 \subsection{Negation-Aware Linguistic Intent Disambiguation}
 
@@ -707,18 +698,20 @@ unseen crisis-related phrasing.
 \caption{Crisis Intent Disambiguation: Naive vs.\ Scope-Resolved}
 \label{tab:negation}
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lcc@{}}
 \toprule
-\textbf{Metric} & \textbf{Naive Substring} & \textbf{Scope-Resolved Filter} \\
+\textbf{Evaluation Metric} & \textbf{Naive Substring} & \textbf{Scope-Resolved Filter} \\
 \midrule
-Detection Rate on Affirmative Statements & 100.0\% (5/5) & \textbf{100.0\% (5/5)} \\
+Affirmative Detection Rate      & 100.0\% (5/5) & \textbf{100.0\% (5/5)} \\
 False Positive Rate (FPR)       & 88.9\% (8/9)  & \textbf{0.0\% (0/9)} \\
 False Alarm Reduction           & —             & \textbf{88.9 pp absolute} \\
 Overall Disambiguation Accuracy & 42.9\% (6/14) & \textbf{100.0\% (14/14)} \\
 \bottomrule
-\multicolumn{3}{@{}l}{\footnotesize All metrics are calculated only on the 14-statement constructed rule-verification} \\
-\multicolumn{3}{@{}l}{\footnotesize suite and are not estimates of clinical model performance.}
-\end{tabular}
+\multicolumn{3}{@{}l}{\footnotesize All metrics calculated on the 14-statement constructed suite;} \\
+\multicolumn{3}{@{}l}{\footnotesize not empirical estimates of clinical model performance.}
+\end{tabular}%
+}
 \end{table}
 
 \subsection{Deployment Latency and Memory}
@@ -738,6 +731,7 @@ was not profiled and will be larger due to Python runtime overhead.
 \caption{End-to-End Latency and Memory Profile}
 \label{tab:latency}
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lccc@{}}
 \toprule
 \textbf{Pipeline Component}
@@ -756,7 +750,8 @@ Saathi Companion (Gemini 2.5)$^\ddagger$ & 390.0 & 780.0 & Ext. \\
 \multicolumn{4}{@{}l}{\footnotesize \phantom{$^*$}total OS process Resident Set Size (RSS) was not measured.} \\
 \multicolumn{4}{@{}l}{\footnotesize $^\ddagger$Saathi is an interactive conversational module invoked post-screening;} \\
 \multicolumn{4}{@{}l}{\footnotesize \phantom{$^\ddagger$}it is not a sequential component of the 512~ms assessment pipeline.}
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 The local screening path (PHQ-9 rule scoring, client-side acoustic scoring, and
