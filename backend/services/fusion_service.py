@@ -55,19 +55,41 @@ def get_fused_prediction(
         final_probs = {k: round(v, 4) for k, v in normalized_probs.items()}
 
     best_label = max(final_probs, key=final_probs.get)
-    confidence = final_probs[best_label]
+    base_score = final_probs[best_label]
+    confidence = base_score
 
-    # 6. HRE Rule 1: PHQ-9 total >= 20 → force severe
+    # 6. High-Risk Escalation (HRE) Module
     total_score = sum(phq_answers)
-    if total_score >= 20:
+    has_item9 = len(phq_answers) >= 9 and phq_answers[8] > 0
+    
+    # Check text crisis intent via negation service
+    from services.negation_service import detect_crisis_intent
+    text_crisis = detect_crisis_intent(text)["is_crisis"] if text else False
+
+    explicit_crisis = has_item9 or text_crisis
+    high_score = total_score >= 20
+
+    # Rule 1: PHQ-9 total score >= 20
+    if high_score:
         best_label = "severe"
         confidence = max(0.90, confidence)
 
+    # Rule 2: Explicit-indicator escalation (Item 9 > 0 or crisis language)
+    if explicit_crisis:
+        best_label = "severe"
+        confidence = max(0.90, confidence)
+
+    # Resource display is shown for all tier-c3 assessments or explicit crises
+    resource_display = explicit_crisis or (best_label == "severe")
+
     return {
-        "risk_level":   best_label,
-        "confidence":   confidence,
-        "probabilities": final_probs,
-        "raw_probabilities": normalized_probs,
-        "shap_data":    text_result["shap_data"],
-        "audio_features": audio_features,
+        "risk_level":            best_label,
+        "confidence":            confidence,
+        "base_score":            base_score,
+        "probabilities":         final_probs,
+        "raw_probabilities":     normalized_probs,
+        "crisis_flag":           explicit_crisis,
+        "resource_display_flag": resource_display,
+        "shap_data":             text_result["shap_data"],
+        "audio_features":        audio_features,
     }

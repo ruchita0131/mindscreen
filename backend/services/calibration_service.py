@@ -13,7 +13,7 @@ import numpy as np
 from typing import Dict, List, Tuple, Any
 
 
-DEFAULT_TEMPERATURE = 1.28  # Empirically tuned temperature for late fusion smoothing
+DEFAULT_TEMPERATURE = 1.20  # Score-smoothing temperature for late fusion transformation
 
 
 def apply_temperature_scaling(
