@@ -7,6 +7,7 @@ import { Progress } from '../components/ui/Progress';
 import { ArrowRight, ArrowLeft, CheckCircle, Mic, Square, Trash2, SkipForward, AlertCircle } from 'lucide-react';
 import { usePredictFused } from '../hooks/useAssessment';
 import { AudioWaveformVisualizer } from '../components/tools/AudioWaveformVisualizer';
+import { AudioFeatureExtractor, AudioFeatures, featuresToNull } from '../utils/audioFeatures';
 
 const phqQuestions = [
   "Little interest or pleasure in doing things?",
@@ -54,6 +55,9 @@ export default function Assessment() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const extractorRef = useRef<AudioFeatureExtractor>(new AudioFeatureExtractor());
+  const [audioFeatures, setAudioFeatures] = useState<AudioFeatures | null>(null);
+  const [activeStream, setActiveStream] = useState<MediaStream | null>(null);
 
   const { mutateAsync: submitAssessment, isPending } = usePredictFused();
 
@@ -106,6 +110,8 @@ export default function Assessment() {
       };
 
       mediaRecorder.start(250); // collect data every 250ms
+      extractorRef.current.start(stream); // begin real-time acoustic feature extraction
+      setActiveStream(stream);
       setIsRecording(true);
 
       // Start timer
@@ -128,12 +134,17 @@ export default function Assessment() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setActiveStream(null);
       if (timerRef.current) clearInterval(timerRef.current);
+      // Capture real acoustic features from the extractor
+      const features = extractorRef.current.stop();
+      setAudioFeatures(features);
     }
   };
 
   const deleteRecording = () => {
     setAudioBlob(null);
+    setAudioFeatures(null);
     setAudioSkipped(false);
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
@@ -145,15 +156,13 @@ export default function Assessment() {
   const handleSubmit = async () => {
     setSubmitError('');
     try {
-      let base64Audio: string | undefined = undefined;
-      if (audioBlob && !audioSkipped) {
-        base64Audio = await blobToBase64(audioBlob);
-      }
+      // Use real acoustic features if available; neutral baseline if skipped
+      const features = audioSkipped ? featuresToNull() : (audioFeatures ?? featuresToNull());
 
       const res = await submitAssessment({
         phq: { answers },
         text: { text: journal },
-        audioBase64: base64Audio
+        audioFeatures: features,
       });
 
       navigate('/results', { state: { result: res } });
@@ -288,7 +297,7 @@ export default function Assessment() {
                         {isRecording ? (
                           <>
                             <p className="text-red-400 font-semibold text-lg mb-2">Recording — {formatTime(recordingSeconds)}</p>
-                            <AudioWaveformVisualizer isRecording={isRecording} />
+                            <AudioWaveformVisualizer isRecording={isRecording} stream={activeStream} />
                             <p className="text-gray-500 text-sm mt-3">Click the button to stop</p>
                           </>
                         ) : (

@@ -168,9 +168,9 @@ export default function Results() {
         <p className="text-sm text-gray-400 mb-5">MindScreen uses a multimodal weighted fusion model combining three inputs:</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: ClipboardList, label: 'PHQ-9 Questionnaire', weight: '20%', desc: 'Your 9 clinical questionnaire answers scored using the validated PHQ-9 scale', color: 'text-brand-amber', bg: 'bg-brand-amber/10' },
-            { icon: Brain, label: 'MentalBERT Text AI', weight: '50%', desc: 'Your written journal entry analysed using a fine-tuned RoBERTa transformer model (87% accuracy)', color: 'text-brand-tealL', bg: 'bg-brand-teal/10' },
-            { icon: Mic, label: 'Acoustic Voice Analysis', weight: '30%', desc: 'MFCC pitch and energy features extracted from your voice recording (DAIC-WOZ methodology)', color: 'text-purple-400', bg: 'bg-purple-400/10' },
+            { icon: ClipboardList, label: 'PHQ-9 Questionnaire', weight: '20%', desc: 'Your 9 clinical responses mapped across the 4-tier screening severity scale', color: 'text-brand-amber', bg: 'bg-brand-amber/10' },
+            { icon: Brain, label: 'DistilRoBERTa Emotion NLP', weight: '50%', desc: 'Your journal entry analysed for affective valence and distress markers via transformer inference', color: 'text-brand-tealL', bg: 'bg-brand-teal/10' },
+            { icon: Mic, label: 'Acoustic Voice Analysis', weight: '30%', desc: 'Web Audio acoustic biomarkers (RMS loudness, energy variability, and spectral centroid)', color: 'text-purple-400', bg: 'bg-purple-400/10' },
           ].map((m) => {
             const Icon = m.icon;
             return (
@@ -189,15 +189,15 @@ export default function Results() {
         </div>
       </div>
 
-      {/* AI Explainability — SHAP */}
+      {/* AI Explainability — Lexical Attribution */}
       {shapWords.length > 0 && (
         <div className="glass-card p-6">
           <div className="flex items-center gap-2 mb-2">
             <Brain className="w-4 h-4 text-brand-tealL" />
-            <h3 className="text-base font-semibold">AI Explainability — Key Words</h3>
+            <h3 className="text-base font-semibold">AI Explainability — Key Influential Words</h3>
           </div>
           <p className="text-xs text-gray-500 mb-4">
-            The following words from your text entry had the most influence on the AI prediction. Positive values (red) increased the risk score, negative values (green) decreased it.
+            The following words from your text entry had the most influence on the screening prediction. Red indicates higher distress indicators; green indicates protective/positive valence.
           </p>
           <div className="flex flex-wrap gap-2">
             {shapWords.map((w: { word: string; value: number }, i: number) => (

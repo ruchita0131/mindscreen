@@ -42,7 +42,8 @@
 This paper presents \textbf{MindScreen}, a deployed, full-stack mental-health
 screening support system that fuses three complementary signal sources---
 Patient Health Questionnaire-9 (PHQ-9) responses, transformer-based text
-emotion classification, and an audio-activity heuristic---through
+emotion classification, and client-side Web Audio acoustic feature extraction
+(RMS loudness, vocal variability, spectral centroid, and speaking ratio)---through
 decision-level late fusion.
 A key architectural contribution is the \textbf{High-Risk Escalation (HRE)}
 module: a formally specified deterministic layer that prevents high-risk
@@ -248,26 +249,33 @@ When the HuggingFace API is unreachable, a deterministic keyword-rule fallback
 maintains service availability.
 
 \subsubsection{Audio Branch ($\mathbf{p}^A$)}
-MindScreen targets free-tier cloud containers where loading torch and librosa
-($>$400~MB) would exceed memory limits.
-The production audio branch therefore uses an audio-payload-size heuristic:
-decoded Base64 payload size $B$~(kB) is used as a speech-activity proxy,
-yielding a conservative fixed score vector:
+To bypass the memory constraints of hosting heavy acoustic libraries
+(such as PyTorch and Librosa exceeding 512~MB RAM) on cloud containers,
+MindScreen offloads signal extraction to the client browser via the standard
+Web Audio API.
+During voice input, an \texttt{AnalyserNode} computes six real-time acoustic
+descriptors over the time and frequency domains: mean RMS loudness
+($\text{RMS}_\mu$), RMS variability ($\text{RMS}_\sigma$), zero-crossing rate
+($\text{ZCR}$), normalized spectral centroid ($S_C$), 85\% spectral rolloff
+($S_R$), and speaking-to-silence ratio ($R_{\text{speak}}$).
+These features capture vocal energy flattening, monotonicity, and speech
+hesitancy associated with depressive affect~\cite{cummins2015}.
+
+The normalized feature vector $\mathbf{f} \in [0,1]^6$ is transmitted to the
+server, where a linear composite depression index $I_D \in [0,1]$ is computed:
 \begin{equation}
-  \mathbf{p}^A =
-  \begin{cases}
-    [0.15,\;0.20,\;0.55,\;0.10]^T, & B < 5\;\text{kB} \\
-    [0.20,\;0.55,\;0.20,\;0.05]^T, & 5 \le B < 30\;\text{kB} \\
-    [0.65,\;0.20,\;0.10,\;0.05]^T, & B \ge 30\;\text{kB} \\
-    [0.55,\;0.25,\;0.15,\;0.05]^T, & \text{recording omitted}
-  \end{cases}
-  \label{eq:acoustic_proxy}
+  I_D = \sum_{j=1}^5 \alpha_j \, \phi_j(\mathbf{f}),
+  \label{eq:acoustic_index}
 \end{equation}
-This is an engineering trade-off for resource-constrained deployment;
-it does not extract $F_0$, MFCCs, or prosodic features, and is not a
-validated acoustic biomarker model.
-Short or absent recordings conservatively elevate the mid-range prior to
-avoid missing moderate-risk presentations when audio data are limited.
+where $\phi_j$ measures deviation toward depressive characteristics
+(reduced energy $1 - \text{RMS}_\mu$, reduced variability
+$1 - \min(\text{RMS}_\sigma/0.25, 1)$, low spectral centroid $1 - S_C$,
+hesitancy $1 - R_{\text{speak}}$, and abnormal ZCR), weighted by design
+constants $\boldsymbol{\alpha} = [0.25, 0.20, 0.20, 0.25, 0.10]^T$.
+The index $I_D$ is then mapped to the 4-class score vector $\mathbf{p}^A$
+via piecewise linear interpolation across calibrated thresholds.
+If voice input is omitted by the user, a neutral prior vector
+$[0.25, 0.45, 0.20, 0.10]^T$ is assigned.
 
 \subsection{Decision-Level Late Fusion}
 \label{sec:fusion}
@@ -498,11 +506,13 @@ targeting full per-modality and fused classification metrics.
 
 \textbf{Heuristic signal sources.}
 All three score vectors ($\mathbf{p}^Q$, $\mathbf{p}^T$, $\mathbf{p}^A$) are
-constructed from fixed design constants, not learned from clinical data.
-In particular, the audio branch uses payload size as a speech-activity proxy
-rather than $F_0$, MFCCs, or energy features.
-Future work will replace this with on-device WebAssembly-based MFCC extraction
-to maintain memory constraints while capturing genuine acoustic features.
+constructed from design constants rather than learned parameters.
+While the audio branch extracts real-time acoustic descriptors
+(RMS energy, variability, and spectral centroid) via the client Web Audio API,
+it maps them using a heuristic linear composite index rather than a deep
+acoustic model trained on clinical recordings.
+Future work will evaluate on-device ONNX/WebAssembly neural feature extractors
+to maintain memory constraints while capturing complex temporal vocal patterns.
 
 \textbf{HRE keyword matching.}
 The crisis token set uses exact string matching without negation detection
