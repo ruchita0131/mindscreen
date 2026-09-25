@@ -92,14 +92,15 @@ probabilistic averaging introduces a critical failure mode:
 \textit{false-negative dilution}.
 If a user reports acute suicidal ideation on PHQ-9 Item~9 or writes crisis
 language in free text, but exhibits calm vocal acoustics, linear weighted
-averaging can push the composite risk below the high-risk threshold---missing
-a flagged individual entirely.
-Among the systems reviewed for this study, we did not identify a deployed
-screening prototype that couples multimodal fusion with a formally specified
-deterministic override to prevent high-risk false-negative dilution within a
-lightweight cloud-hosted environment.
+averaging can push the composite risk below the high-risk threshold,
+potentially reducing the fused score below the selected high-priority
+threshold and thereby failing to preserve the explicit escalation signal.
+Among the systems and descriptions reviewed for this study, we did not identify
+an explicitly documented deterministic high-risk override mechanism matching
+the HRE design used in MindScreen. This observation is limited by the scope of
+the reviewed literature and publicly available system descriptions.
 
-MindScreen addresses this by combining:
+The engineering contributions of this work are:
 \begin{enumerate}
   \item A \textbf{tri-modal late-fusion pipeline} over PHQ-9, text, and
     audio signal sources;
@@ -128,14 +129,17 @@ throughout.
 Existing mental-health screening systems fall into three paradigms.
 \textit{Text-only systems}~\cite{ji2022,xu2024} achieve strong benchmark
 metrics but ignore somatic signals.
-\textit{Unimodal acoustic systems}~\cite{cummins2015,scherer2013} require
-controlled recording environments unsuitable for consumer devices.
+\textit{Acoustic systems}: several acoustic depression-assessment
+studies~\cite{cummins2015,scherer2013} use recordings collected under controlled
+or semi-controlled conditions, which may limit direct transfer to unconstrained
+consumer-device environments.
 \textit{Multimodal systems}~\cite{yang2023,ringeval2019,devault2014} predominantly
 use early-feature concatenation, which is sensitive to modality missingness and
 produces opaque intermediate representations.
-Conversational screening tools such as Woebot~\cite{fitzpatrick2017} are
-clinically validated via RCT but operate on text alone and apply only static
-safety prompts.
+Conversational screening tools: the cited Woebot study~\cite{fitzpatrick2017}
+evaluated a text-based conversational agent in a randomized controlled trial;
+its task, population, and evaluation setting differ from the multimodal
+screening architecture investigated here.
 
 Table~\ref{tab:related} positions MindScreen against these approaches.
 Two distinguishing design properties are: (a)~decision-level late fusion that
@@ -149,25 +153,29 @@ HRE design used in MindScreen.
 \caption{Comparison of Related Mental Health Screening Systems}
 \label{tab:related}
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 \textbf{System} & \textbf{Modalities}
-  & \textbf{Fusion} & \textbf{HRE} & \textbf{Deployed} \\
+  & \textbf{Fusion} & \textbf{HRE} & \textbf{Technical Hosting} \\
 \midrule
-Woebot~\cite{fitzpatrick2017}        & Text       & —          & Static & Yes \\
-MentalBERT~\cite{ji2022}             & Text       & —          & No     & No  \\
-SimSensei~\cite{devault2014}         & Text+V+A   & Early      & No     & No  \\
-AVEC~\cite{ringeval2019}             & Text+V+A   & Early/mid  & No     & No  \\
-Cummins~et~al.~\cite{cummins2015}   & Audio      & —          & No     & No  \\
-\textbf{MindScreen (this work)}      & \textbf{PHQ+Text+A} & \textbf{Late} & \textbf{Yes} & \textbf{Yes} \\
+Woebot~\cite{fitzpatrick2017}        & Text       & —          & Static & Cloud service \\
+MentalBERT~\cite{ji2022}             & Text       & —          & No     & Pretrained model \\
+SimSensei~\cite{devault2014}         & Text+V+A   & Early      & No     & Kiosk system \\
+AVEC~\cite{ringeval2019}             & Text+V+A   & Early/mid  & No     & Benchmark dataset \\
+Cummins~et~al.~\cite{cummins2015}   & Audio      & —          & No     & Research pipeline \\
+\textbf{MindScreen (this work)}      & \textbf{PHQ+Text+A} & \textbf{Late} & \textbf{Yes} & \textbf{Cloud prototype} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \vspace{1ex}
 \parbox{\columnwidth}{\footnotesize \textit{Note:} The systems listed in
 Table~\ref{tab:related} are not directly comparable in terms of task definition,
 target population, clinical dataset, deployment status, or evaluation protocol;
 the table is intended to provide architectural context rather than a controlled
-performance comparison.}
+performance comparison. The MindScreen prototype was evaluated in a cloud-hosted
+container; this technical hosting status should not be interpreted as clinical,
+public-health, or production deployment.}
 \end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -240,6 +248,11 @@ These probability vectors are manually specified engineering constants aligned
 with conventional PHQ-9 score intervals~\cite{kroenke2001}; they represent heuristic design
 parameters rather than empirical class-conditional likelihoods estimated from
 patient data.
+The PHQ-9 branch uses band-level heuristic vectors rather than a
+score-continuous probabilistic model. Consequently, two respondents with
+different scores within the same interval receive the same questionnaire
+branch vector. This design choice prioritizes deterministic implementation
+and interpretability over fine-grained score calibration.
 
 \subsubsection{NLP Text Branch ($\mathbf{p}^T$)}
 Free-text input $T$ is classified by \textit{j-hartmann/emotion-english-distilroberta-base}~\cite{hartmann2022},
@@ -269,8 +282,10 @@ and third-party media references), the index is escalated: $\Gamma(e^*) \leftarr
 The score vector $\mathbf{p}^T$ is then formed by assigning $s$ to the
 predicted class and $0.10$ to each remaining class, followed by
 $\ell_1$ normalization.
-This emotion-to-risk mapping is a design heuristic; its relationship to
-clinical depression severity has not been empirically validated.
+The text branch is used as a coarse affective signal rather than a standalone
+depression classifier. The mapping from emotion categories to screening indices
+is a heuristic design choice; it is not intended to establish diagnostic severity
+or to infer the absence of crisis risk from non-negative emotion labels.
 When the HuggingFace API is unreachable or times out, a deterministic keyword-rule
 fallback maintains software-level service continuity; this heuristic fallback
 provides operational availability rather than equivalent transformer classification fidelity.
@@ -285,11 +300,14 @@ descriptors over the time and frequency domains: mean RMS loudness
 ($\text{RMS}_\mu$), RMS energy variability ($\text{RMS}_\sigma$), zero-crossing
 rate ($\text{ZCR}$), normalized spectral centroid ($S_C$), 85\% spectral rolloff
 ($S_R$), and speaking-to-silence ratio ($R_{\text{speak}}$).
-These features have been investigated in the speech processing literature as
-potential correlates of affective states and motor-speech changes~\cite{cummins2015};
-in MindScreen, they are incorporated into a manually specified heuristic index
-rather than a clinically trained diagnostic model. The index does not measure
-depression directly, but provides a heuristic estimate of acoustic flatness and hesitancy.
+The acoustic coefficients and threshold intervals were selected as engineering
+design parameters for prototype-level signal aggregation, rather than estimated
+through supervised learning. Their purpose is to provide a lightweight and
+interpretable heuristic representation of acoustic variation. The selected
+features and coefficient values should therefore not be interpreted as validated
+biomarkers of depression. Future work will estimate the mapping using an
+appropriately annotated speech dataset and evaluate its robustness across
+recording devices, languages, accents, and speaking conditions.
 
 The normalized feature vector
 $\mathbf{f} = [\text{RMS}_\mu, \text{RMS}_\sigma, \text{ZCR}, S_C, S_R, R_{\text{speak}}]^T \in [0,1]^6$
@@ -365,10 +383,14 @@ To ensure semantic clarity, the system maintains a strict separation among:
 (2)~the Boolean crisis indicator $C_F$, which is asserted specifically upon
 detecting acute suicidal ideation ($q_9 > 0$ or affirmative crisis language);
 (3)~the resource display flag $R_D$, which presents crisis helpline information
-(Tele-MANAS~\cite{telemanas2022}, KIRAN) whenever $C_F$ is active or as a
+(Tele-MANAS~\cite{telemanas2022}, KIRAN~\cite{kiran2020}) whenever $C_F$ is active or as a
 precautionary measure whenever $\hat{y} = c_3$; and
 (4)~the priority score $c_{\text{out}}$, which is clamped to a floor of $0.90$
 under rule-based override.
+Resource display is intentionally precautionary: the presentation of crisis-related
+information does not imply that the system has established suicidal intent or
+a clinical diagnosis. The resource-routing behavior is an operational safety
+design choice.
 The value $c_{\text{out}} \leftarrow \max(0.90, s_F)$ is an engineering priority
 indicator intended for triage sorting, not a calibrated posterior probability.
 
@@ -453,13 +475,16 @@ Algorithm~\ref{alg:fusion} gives the complete inference flow.
 \subsection{Saathi: LLM-Assisted Conversational Companion}
 \label{sec:saathi}
 
-Saathi is an LLM-assisted conversational component backed by Google Gemini~2.5
-Flash (primary) or Mistral-7B-Instruct (fallback), maintaining 8-turn
-conversational context.
+Saathi is an interactive, LLM-assisted conversational component backed by
+Google Gemini~2.5 Flash, maintaining an 8-turn conversational context.
+Saathi is invoked post-screening as a distinct conversational companion and is
+not part of the 512~ms assessment screening pipeline.
 It operates in four sequential stages:
 (1)~a \textit{crisis safety gate} utilizing linguistic negation and
 scope-resolved intent analysis to immediately surface national helpline
-information if affirmative crisis signals appear;
+information if affirmative crisis signals appear; the Saathi crisis gate is a
+rule-based first-stage safeguard and does not guarantee detection of all
+expressions of suicidal intent or other forms of acute psychological risk;
 (2)~\textit{affective topic routing} classifying user statements into six
 domains (family, academics, insomnia, anxiety, isolation, positive);
 (3)~\textit{LLM response generation} conditioned on the classified domain and
@@ -469,6 +494,8 @@ grounding) interleaved every 3--4 turns.
 Saathi does not provide clinical advice; it directs users to professional
 resources.
 LLM response safety and factuality have not been formally evaluated.
+Local template fallbacks maintain service continuity if external API quotas
+are exhausted.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Evaluation}
@@ -508,6 +535,11 @@ TC-3: Crisis keyword, low PHQ-9
 \end{tabular}
 \end{table}
 
+These scenarios verify the intended execution of the deterministic HRE rules
+under selected constructed input conditions. They do not establish that the
+underlying crisis-intent detector is clinically sensitive, specific, or robust
+to unseen language.
+
 To evaluate the sensitivity of late fusion to weighting choices and test the
 anti-dilution behavior of the HRE module, we conducted an empirical sensitivity
 analysis across five weighting configurations: Equal (33/33/33), Text-Dominant
@@ -525,6 +557,17 @@ These constructed scenarios illustrate that the evaluated linear weighting
 configurations can be vulnerable to discordant inputs, motivating the use of a
 deterministic HRE layer.
 
+For reproducibility, each constructed profile was evaluated using explicitly
+specified modality score vectors ($\mathbf{p}^Q, \mathbf{p}^T, \mathbf{p}^A$):
+•~P1 ($S=22$): $\mathbf{p}^Q=[0.00, 0.05, 0.15, 0.80]^T$, $\mathbf{p}^T=[0.05, 0.05, 0.05, 0.85]^T$, $\mathbf{p}^A=[0.03, 0.13, 0.46, 0.38]^T$;
+•~P2 ($S=1$): $\mathbf{p}^Q=[0.80, 0.15, 0.05, 0.00]^T$, $\mathbf{p}^T=[0.90, 0.05, 0.03, 0.02]^T$, $\mathbf{p}^A=[0.52, 0.34, 0.11, 0.03]^T$;
+•~P3 ($S=20$): $\mathbf{p}^Q=[0.00, 0.05, 0.15, 0.80]^T$, $\mathbf{p}^T=[0.90, 0.05, 0.03, 0.02]^T$, $\mathbf{p}^A=[0.32, 0.45, 0.19, 0.04]^T$;
+•~P4 ($S=6$): $\mathbf{p}^Q=[0.10, 0.70, 0.15, 0.05]^T$, $\mathbf{p}^T=[0.90, 0.05, 0.03, 0.02]^T$, $\mathbf{p}^A=[0.03, 0.12, 0.43, 0.42]^T$;
+•~P5 ($S=2, q_9=1$): $\mathbf{p}^Q=[0.80, 0.15, 0.05, 0.00]^T$, $\mathbf{p}^T=[0.10, 0.15, 0.70, 0.05]^T$, $\mathbf{p}^A=[0.13, 0.48, 0.32, 0.07]^T$.
+The scores reported in Table~\ref{tab:ablation} represent the maximum convex fused
+score ($s_F$) before deterministic HRE escalation. The corresponding HRE output
+is shown separately using the notation $c_3^*$. All values are rounded to two decimal places.
+
 \begin{table}[!t]
 \caption{Modality Weight Sensitivity and Anti-Dilution Analysis}
 \label{tab:ablation}
@@ -533,11 +576,11 @@ deterministic HRE layer.
 \toprule
 \textbf{Constructed Profile} & \textbf{Equal} & \textbf{Text-Dom} & \textbf{Audio-Dom} & \textbf{PHQ-Dom} & \textbf{MindScreen} \\
 \midrule
-P1: High Symptom Burden (Severe) & $0.68 \to c_3^*$ & $0.75 \to c_3^*$ & $0.56 \to c_3^*$ & $0.73 \to c_3^*$ & $0.70 \to c_3^*$ \\
+P1: High Symptom Burden ($S \ge 20$) & $0.68 \to c_3^*$ & $0.75 \to c_3^*$ & $0.56 \to c_3^*$ & $0.73 \to c_3^*$ & $0.70 \to c_3^*$ \\
 P2: Concordant Minimal& $0.74$           & $0.80$           & $0.65$           & $0.76$           & $0.77$           \\
 P3: Masked Affect     & $0.41 \to c_3^*$ & $0.60 \to c_3^*$ & $0.37 \to c_3^*$ & $0.49 \to c_3^*$ & $0.55 \to c_3^*$ \\
-P4: Somatic Flatness  & $0.34$           & $0.57$           & $0.29$           & $0.45$           & $0.48$           \\
-P5: Implicit Ideation & $0.36 \to c_3^*$ & $0.50 \to c_3^*$ & $0.35 \to c_3^*$ & $0.53 \to c_3^*$ & $0.46 \to c_3^*$ \\
+P4: Somatic Flatness  & $0.34$           & $0.57$           & $0.30$           & $0.45$           & $0.48$           \\
+P5: Implicit Ideation & $0.36 \to c_3^*$ & $0.49 \to c_3^*$ & $0.35 \to c_3^*$ & $0.53 \to c_3^*$ & $0.46 \to c_3^*$ \\
 \bottomrule
 \multicolumn{6}{@{}l}{\footnotesize $^*$Escalated to internal high-priority tier ($c_3$) by HRE deterministic bound ($c_{\text{out}} \leftarrow \max(0.90, s_F)$).}
 \end{tabular}
@@ -593,8 +636,11 @@ In contrast, the scope-resolution filter produced no false alarms on the nine
 negative or third-party statements (0/9, an absolute decrease of 88.9 percentage
 points within this test suite) and detected all five affirmative statements in
 this constructed rule-verification set.
-These results should not be interpreted as empirical estimates of clinical
-sensitivity or specificity.
+These results characterize behavior on the constructed rule-verification suite only.
+They demonstrate that the implemented scope rules handled the selected negation,
+third-party, and figurative examples, but they do not establish generalization
+to naturalistic clinical language, culturally specific expressions, sarcasm, or
+unseen crisis-related phrasing.
 
 \begin{table}[!t]
 \caption{Crisis Intent Disambiguation: Naive vs.\ Scope-Resolved}
@@ -609,6 +655,8 @@ False Positive Rate (FPR)       & 88.9\% (8/9)  & \textbf{0.0\% (0/9)} \\
 False Alarm Reduction           & —             & \textbf{88.9 pp absolute} \\
 Overall Disambiguation Accuracy & 42.9\% (6/14) & \textbf{100.0\% (14/14)} \\
 \bottomrule
+\multicolumn{3}{@{}l}{\footnotesize All metrics are calculated only on the 14-statement constructed rule-verification} \\
+\multicolumn{3}{@{}l}{\footnotesize suite and are not estimates of clinical model performance.}
 \end{tabular}
 \end{table}
 
@@ -651,11 +699,13 @@ Saathi Companion (Gemini 2.5)$^\ddagger$ & 390.0 & 780.0 & Ext. \\
 The local screening path (PHQ-9 rule scoring, client-side acoustic scoring, and
 keyword fallback) executes within 25~ms and 25~MB of Python heap, ensuring
 operational continuity if network connectivity is impaired.
-The reported cloud screening latency (512.0~ms mean) includes the local screening
-operations (PHQ-9 mapping and acoustic scoring) and the Hugging Face inference API
-request, including network round-trip time.
+The reported cloud screening latency (512.0~ms mean) includes the server-side
+screening operations (PHQ-9 mapping and acoustic scoring) and the Hugging Face
+inference API request, including network round-trip time.
+The local screening operations are included in the same end-to-end measurement
+and should therefore not be added independently to the reported cloud mean.
 Saathi's Gemini request (390.0~ms mean) is measured separately during the interactive
-dialogue stage and is not included in this assessment pipeline value.
+conversational stage and is not included in the assessment pipeline latency.
 These figures characterize prototype performance under single-user load;
 concurrent-load throughput has not been profiled.
 
@@ -794,6 +844,12 @@ Ministry of Health and Family Welfare, Government of India,
 ``Tele-MANAS,''
 \textit{National Health Mission}, 2022.
 [Online]. Available: \url{https://telemanas.mohfw.gov.in}
+
+\bibitem{kiran2020}
+Ministry of Social Justice and Empowerment, Government of India,
+``KIRAN: 24/7 Mental Health Rehabilitation Helpline,''
+2020.
+[Online]. Available: \url{http://disabilityaffairs.gov.in}
 
 \bibitem{guo2017}
 C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q.~Weinberger,
