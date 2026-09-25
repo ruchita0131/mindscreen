@@ -144,11 +144,10 @@ def get_fallback_reply(topic: str, turn_count: int) -> str:
 
 def call_gemini_llm(message: str, history: List[ChatMessage], gemini_key: str) -> Optional[str]:
     """
-    Call Google Gemini 1.5 Flash via official REST API.
+    Call Google Gemini 2.5 Flash via official REST API.
     Lightweight, fast (<1s), warm conversational output.
     """
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
         contents = []
         for msg in history[-8:]:
             role = "user" if msg.sender == "user" else "model"
@@ -170,17 +169,25 @@ def call_gemini_llm(message: str, history: List[ChatMessage], gemini_key: str) -
                 "maxOutputTokens": 350
             }
         }
-        resp = requests.post(url, json=payload, timeout=15)
-        if resp.status_code == 200:
-            data = resp.json()
-            candidates = data.get("candidates", [])
-            if candidates and "content" in candidates[0]:
-                parts = candidates[0]["content"].get("parts", [])
-                if parts and "text" in parts[0]:
-                    text = parts[0]["text"].strip()
-                    if len(text) > 10:
-                        return text
-        logger.warning(f"Gemini API status {resp.status_code}: {resp.text[:200]}")
+        for model in ["gemini-2.5-flash", "gemini-flash-lite-latest"]:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={gemini_key}"
+            resp = requests.post(url, json=payload, timeout=15)
+            if resp.status_code == 200:
+                data = resp.json()
+                candidates = data.get("candidates", [])
+                if candidates and "content" in candidates[0]:
+                    parts = candidates[0]["content"].get("parts", [])
+                    # Filter for actual text part (ignore thought parts if any)
+                    text_parts = [p.get("text", "") for p in parts if "text" in p and not p.get("thought")]
+                    if text_parts:
+                        text = "".join(text_parts).strip()
+                        if len(text) > 10:
+                            return text
+                    elif parts and "text" in parts[0]:
+                        text = parts[0]["text"].strip()
+                        if len(text) > 10:
+                            return text
+            logger.warning(f"Gemini {model} API status {resp.status_code}: {resp.text[:200]}")
     except Exception as e:
         logger.warning(f"Gemini API error: {e}")
     return None
