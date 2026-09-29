@@ -130,7 +130,7 @@ export const ClinicalReportModal: React.FC<ClinicalReportModalProps> = ({
                     : 'Reason: Verified linguistic crisis intent detected in text entry.'}
                 </p>
                 <p className="mt-1 text-gray-300 print:text-gray-700 font-medium">
-                  Routing: Tele-MANAS (14416) | KIRAN (1800-599-0019)
+                  Routing: Tele-MANAS (14416 / 1-800-891-4416) | iCall TISS (9152987821)
                 </p>
               </div>
             </div>
