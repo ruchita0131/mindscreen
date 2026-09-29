@@ -1,6 +1,5 @@
 """
-Crisis-intent filter, revision 2.1 (clause-scoped, ConText-style).
-v2.1 = evaluated v2 + self-harm expressions as crisis triggers.
+Crisis-intent filter, revision 2 (clause-scoped, ConText-style).
 
 Changes relative to v1 (backend/services/negation_service.py):
   1. Scope is the clause, not a fixed 30-character window. Clauses end at
@@ -61,12 +60,9 @@ EXPLICIT = [
     (r"\bsuicide\s+note\b", False),
     (r"\b(?:hang|hanging|overdos(?:e|ing)\s+on|shoot|shooting)\s+myself\b", True),
     (r"\bslit(?:ting)?\s+my\s+wrists?\b", True),
-    # v2.1: self-harm statements set the crisis flag (PHQ-9 Item 9 covers self-harm)
-    (r"\bself[-\s]?harm(?:ing|ed)?\b", False),
-    (r"\b(?:hurt|hurting|cut|cutting|burn|burning|harm|harming)\s+myself\b", True),
 ]
 
-DISTRESS = [r"\bhopeless(?:ness)?\b", r"\bworthless(?:ness)?\b"]
+DISTRESS = [r"\bhopeless(?:ness)?\b", r"\bworthless(?:ness)?\b", r"\bself[-\s]?harm(?:ing)?\b"]
 
 IDIOMS = [
     r"\bkill(?:ing)?\s+time\b", r"\bkilling\s+it\b", r"\bkilling\s+me\s+with\s+laughter\b",
@@ -170,24 +166,3 @@ if __name__ == "__main__":
     import sys
     for s in sys.argv[1:]:
         print(s, "->", detect_crisis_intent(s))
-
-
-# ---------------------------------------------------------------------------
-# Backward-compatible wrapper for the existing MindScreen callers
-# (ml_service, fusion_service, routers/chat.py expect these keys).
-# ---------------------------------------------------------------------------
-_detect_v2 = detect_crisis_intent
-
-
-def detect_crisis_intent(text: str) -> Dict[str, Any]:  # noqa: F811
-    r = _detect_v2(text)
-    return {
-        "is_crisis": r["is_crisis"],
-        "distress": r["distress"],
-        "trigger": r["trigger"],
-        "negated": r["negated_hits"] > 0 and not r["is_crisis"],
-        "third_party": r["third_party_hits"] > 0 and not r["is_crisis"],
-        "colloquial": False,
-        # rule-based filter: no calibrated confidence is available
-        "confidence": None,
-    }
